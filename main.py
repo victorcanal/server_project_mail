@@ -66,6 +66,3 @@ if __name__ == '__main__':
 
     print("You selected menu entry number " + str(entry_number) + " : " + str(entry_names[entry_number - 1]))
     menu(entry_number)
-
-    # connect()
-    read()
