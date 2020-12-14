@@ -57,12 +57,11 @@ if __name__ == '__main__':
         try:
             print("Desired menu entry number: ")
             entry_number = int(input())
+            break
         except ValueError:
             print("Error : The given answer is not a number.")
-            break
         if entry_number > len(entry_names) or entry_number <= 0:
             print("Error : The given answer is not in the list.")
-            break
 
     print("You selected menu entry number " + str(entry_number) + " : " + str(entry_names[entry_number - 1]))
     menu(entry_number)
