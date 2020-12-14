@@ -67,6 +67,8 @@ def retrieve():
                 mail_to = message['to']
                 mail_subject = message['subject']
                 mail_date = str(datetime.datetime.now())
+                print(mail_date)
+                #mail_date = sqlite3.datetime.
 
                 # then for the text we have a little more work to do
                 # because it can be in plain text or multipart
@@ -94,7 +96,8 @@ def retrieve():
                 #print(f'Content: {mail_content}')
                 conn = sqlite3.connect('mail.db')
                 c = conn.cursor()
-                c.execute(f"INSERT INTO mail VALUES ('{mail_from}','{mail_to}','{mail_subject}',{mail_date},''")
+                c.execute(f"INSERT INTO mail VALUES ('{mail_from}','{mail_to}','{mail_subject}','mail_date',' '")
+                conn.commit()
                 conn.close()
 
 def read():
