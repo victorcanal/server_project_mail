@@ -1,21 +1,25 @@
-import argparse;
+import sqlite3;
 
 def connect():
-    return
+    conn = sqlite3.connect('mail.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE mail
+                 (source text, destination text, data text, date datetime, text filepath)''')
+    c.execute("INSERT INTO mail VALUES ('Dupont','Moi','Bonjour','2020-12-14 20:22:30.500','')")
+    conn.commit()
+    conn.close()
 
 def read():
-    return
+    conn = sqlite3.connect('mail.db')
+    c = conn.cursor()
+    for row in c.execute('SELECT * FROM mail ORDER BY source'):
+        print(row)
+    conn.close();
 
 def send(file):
     return
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='MUA in Python')
-
-    parser.add_argument('--text', metavar='example.txt',
-                        help='path to the text to send', default="null")
-
-    #args = parser.parse_args()
-    #make_get_request(args.type, args.destination)
-    #get_response(args.destination)
+    #connect()
+    read()
