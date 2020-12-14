@@ -14,7 +14,7 @@ def read():
     c = conn.cursor()
     for row in c.execute('SELECT * FROM mail ORDER BY source'):
         print(row)
-    conn.close();
+    conn.close()
 
 def send(file):
     return
