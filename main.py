@@ -60,13 +60,27 @@ def login():
 def db_init():
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
+    c.execute('''DROP TABLE IF EXISTS mails''')
+    c.execute('''DROP TABLE IF EXISTS accounts''')
+    c.execute('''CREATE TABLE IF NOT EXISTS accounts (account_address VARCHAR(256) NOT NULL PRIMARY KEY)''')
     c.execute('''CREATE TABLE IF NOT EXISTS mails (
-        mail_from TEXT NOT NULL,
-        mail_to_list TEXT NOT NULL,
+        mail_id VARCHAR(256) NOT NULL PRIMARY KEY,
+        mail_from TEXT,
+        mail_to_list TEXT,
         mail_subject TEXT,
         mail_content TEXT,
         mail_attachment_list TEXT,
-        mail_date DATETIME NOT NULL)''')
+        mail_date DATETIME,
+        mail_is_outbound BOOL,
+        account_address VARCHAR(256),
+        FOREIGN KEY (account_address) REFERENCES accounts(account_address))''')
+    # c.execute('''ALTER TABLE accounts ADD CONSTRAINT PK_accounts PRIMARY KEY (account_address)''')
+    # c.execute('''ALTER TABLE mails ADD CONSTRAINT PK_mails PRIMARY KEY (mail_id)''')
+    # c.execute('''ALTER TABLE mails
+    #     ADD CONSTRAINT FK_mails_account_address
+    #     FOREIGN KEY (account_address)
+    #     REFERENCES accounts (account_address)''')
+
     # c.execute("INSERT INTO mails VALUES (" +
     #           "'marcel.dupont@free.fr'," +
     #           "'clara.rabouan@gmail.com'," +
@@ -78,10 +92,10 @@ def db_init():
     conn.close()
 
 
-def retrieve(user_address: str, user_password: str, server_address: str):
-    # EMAIL = 'clara.rabouan@gmail.com'
-    # PASSWORD = 'claradu77'
-    # SERVER = 'imap.gmail.com'
+def retrieve():  # user_address: str, user_password: str, server_address: str
+    user_address = 'clara.rabouan@gmail.com'
+    user_password = 'claradu77'
+    server_address = 'imap.gmail.com'
 
     ssl_connection = imaplib.IMAP4_SSL(server_address)
     ssl_connection.login(user_address, user_password)
@@ -98,6 +112,13 @@ def retrieve(user_address: str, user_password: str, server_address: str):
             if isinstance(response_part, tuple):
                 message = email.message_from_bytes(response_part[1])
 
+                print('Mail number ' + str(i))
+                for key in message:
+                    print(key)
+                print("#############################################")
+
+                mail_id = message['message-id']
+                print(mail_id)
                 mail_from = message['from']
                 mail_to = message['to']
                 mail_subject = message['subject']
@@ -113,16 +134,20 @@ def retrieve(user_address: str, user_password: str, server_address: str):
                     mail_content = message.get_payload()
 
                 mail_attachments = ''
+                mail_is_outbound = False
 
                 sqlite_db = sqlite3.connect('mails.db')
                 c = sqlite_db.cursor()
                 c.execute("INSERT INTO mails VALUES ('" +
+                          mail_id + "','" +
                           mail_from + "','" +
                           mail_to + "','" +
                           mail_subject + "','" +
                           mail_content + "','" +
                           mail_attachments + "','" +
-                          mail_date + "')")
+                          mail_date + "'," +
+                          str(int(mail_is_outbound)) + ",'" +
+                          user_address + "')")
                 sqlite_db.commit()
                 sqlite_db.close()
     ssl_connection.logout()
@@ -131,7 +156,7 @@ def retrieve(user_address: str, user_password: str, server_address: str):
 def read():
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    for row in c.execute('SELECT * FROM mail ORDER BY source'):
+    for row in c.execute('SELECT * FROM mails ORDER BY mail_date'):
         print(row)
     conn.close()
 
@@ -143,7 +168,7 @@ def send():
         while flag:
             destination=input("Enter the email of destination:\n")
             if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", destination):
-                flag=False
+                flag = False
             else:
                 print("Wrong format of mail")
         subject = input("Enter the subject of your email:\n")
@@ -178,7 +203,7 @@ def menu(case: int):
 if __name__ == '__main__':
     clear()
     db_init()
-    login()
+    # login()
 
     print("Menu:")
     entry_names = ["Read", "Send", "Retrieve"]
@@ -195,4 +220,3 @@ if __name__ == '__main__':
             menu(entry_number)
         except ValueError:
             print("Error: The given answer is not a number.")
-
