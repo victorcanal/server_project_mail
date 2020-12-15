@@ -1,3 +1,4 @@
+import os
 import datetime
 import sqlite3
 import smtplib
@@ -6,7 +7,52 @@ import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import re
+from getpass import getpass
 
+def clear(): 
+    if os.name == 'nt': 
+        _ = os.system('cls') 
+    else: 
+        _ = os.system('clear')
+
+def login():
+    while True:
+        imapdict = {
+            "gmail": ("imap.gmail.com",993),
+            "aol": ("imap.aol.com ",993),
+            "outlook": ("imap-mail.outlook.com",993),
+            "yahoo": ("imap.mail.yahoo.com",993),
+            "free": ("imap.free.fr",143),
+            "laposte": ("imap.laposte.net",993)
+        }
+        smtpdict = {
+            "gmail": ("smtp.gmail.com",587),
+            "aol": ("smtp.aol.com",587),
+            "outlook": ("smtp-mail.outlook.com",587),
+            "yahoo": ("smtp.mail.yahoo.com",465),
+            "free": ("smtp.free.fr",25),
+            "laposte": ("smtp.laposte.net", 587)
+        }
+        print("Enter your credentials:\n")
+        mail = None
+        while(True):
+            mail=input("Mail address: ")
+            if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", mail):
+                break
+            else:
+                print("Wrong format of mail")
+        password = getpass("Password: ")
+        mailserver = mail.split('@')[1].split('.')[0]
+        imapaddr = imapdict.get(mailserver, "No imap server address associated.")
+        smtpaddr = smtpdict.get(mailserver, "No smtp server address associated.")
+        if isinstance(imapaddr,tuple) and isinstance(smtpaddr, tuple):
+            break
+        else:
+            print("This email address isn't supported.")
+    #print(mail,password, imapaddr,smtpaddr)
+    clear()
+    print("Credentials saved.")
+    return mail, password, imapaddr, smtpaddr
 
 def db_init():
     conn = sqlite3.connect('mails.db')
@@ -118,7 +164,9 @@ def menu(case: int):
 
 
 if __name__ == '__main__':
+    clear()
     db_init()
+    login()
 
     print("Menu:")
     entry_names = ["Read", "Send", "Retrieve"]
