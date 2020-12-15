@@ -7,7 +7,7 @@ import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import re
-from getpass import getpass
+# from getpass import getpass
 
 
 IMAP_DICT = {
@@ -38,36 +38,38 @@ def clear():
 def login():
     while True:
         print("Enter your credentials:\n")
-        user_address_ = None
+        _user_address = None
         while True:
-            user_address_ = input("Mail address: ")
-            if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", user_address_):
+            _user_address = input("Mail address: ")
+            if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", _user_address):
                 break
             else:
                 print("Wrong format of mail")
-        password = getpass("Password: ")
-        mail_server = user_address_.split('@')[1].split('.')[0]
+        password = input("Password: ")  # getpass("Password: ")
+        mail_server = _user_address.split('@')[1].split('.')[0]
         imap_addr = IMAP_DICT.get(mail_server, "No imap server address associated.")
         smtp_addr = SMTP_DICT.get(mail_server, "No smtp server address associated.")
         if isinstance(imap_addr, tuple) and isinstance(smtp_addr, tuple):
             break
         else:
             print("This email address isn't supported.")
+
     # print(mail,password, imap_addr,smtp_addr)
     clear()
     # print("Credentials saved.")
     # return mail, password, imap_addr, smtp_addr
 
+    # TODO: Try catch for if credentials are wrong
     imap_connection = imaplib.IMAP4_SSL(imap_addr[0])
-    imap_connection.login(user_address_, password)
+    imap_connection.login(_user_address, password)
 
     smtp_connection = smtplib.SMTP(smtp_addr[0], smtp_addr[1])
     smtp_connection.ehlo()
     smtp_connection.starttls()
     smtp_connection.ehlo()
-    smtp_connection.login(user_address_, password)
+    smtp_connection.login(_user_address, password)
 
-    return user_address, imap_connection, smtp_connection
+    return _user_address, imap_connection, smtp_connection
 
 
 def logout():
@@ -151,6 +153,9 @@ def retrieve():  # connection ssl to an imap server
 
                 sqlite_db = sqlite3.connect('mails.db')
                 c = sqlite_db.cursor()
+
+                # TODO: Verify if id isn't already in database
+
                 c.execute("INSERT INTO mails VALUES ('" +
                           mail_id + "','" +
                           mail_from + "','" +
@@ -212,14 +217,18 @@ if __name__ == '__main__':
     user_address, imap_connection, smtp_connection = login()
     db_init()
 
+    # TODO: After logging out, send the user back to login
+    # TODO: In read : sort mails
+    # TODO: Save mails to .imf format files
+
     print("Menu:")
     entry_names = ["Retrieve", "Send", "Read", "Logout"]
 
-    for i in range(len(entry_names)):
-        print(str(i + 1) + ": " + entry_names[i])
-
     entry_number = -1
     while True:
+        for i in range(len(entry_names)):
+            print(str(i + 1) + ": " + entry_names[i])
+
         try:
             print("Desired menu entry number: ")
             entry_number = int(input())
