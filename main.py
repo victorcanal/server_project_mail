@@ -8,12 +8,23 @@ from email.mime.text import MIMEText
 import re
 
 
-def connect():
-    conn = sqlite3.connect('mail.db')
+def db_init():
+    conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE mail
-                 (source text, destination text, data text, date datetime, text filepath)''')
-    c.execute("INSERT INTO mail VALUES ('Dupont','Moi','Bonjour','2020-12-14 20:22:30.500','')")
+    c.execute('''CREATE TABLE IF NOT EXISTS mails (
+        mail_from TEXT NOT NULL,
+        mail_to_list TEXT NOT NULL,
+        mail_subject TEXT,
+        mail_content TEXT,
+        mail_attachment_list TEXT,
+        mail_date DATETIME NOT NULL)''')
+    # c.execute("INSERT INTO mails VALUES (" +
+    #           "'marcel.dupont@free.fr'," +
+    #           "'clara.rabouan@gmail.com'," +
+    #           "'Sujet intéressant'," +
+    #           "'Bla bla bla texte texte'," +
+    #           "'image.png'," +
+    #           "'2020-12-14 20:22:30.500')")
     conn.commit()
     conn.close()
 
@@ -107,6 +118,8 @@ def menu(case: int):
 
 
 if __name__ == '__main__':
+    db_init()
+
     print("Menu:")
     entry_names = ["Read", "Send", "Retrieve"]
 
