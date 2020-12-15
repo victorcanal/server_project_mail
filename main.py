@@ -28,21 +28,21 @@ def db_init():
     conn.close()
 
 
-def retrieve():
-    EMAIL = 'clara.rabouan@gmail.com'
-    PASSWORD = 'claradu77'
-    SERVER = 'imap.gmail.com'
+def retrieve(user_address: str, user_password: str, server_adress: str):
+    # EMAIL = 'clara.rabouan@gmail.com'
+    # PASSWORD = 'claradu77'
+    # SERVER = 'imap.gmail.com'
 
-    mail = imaplib.IMAP4_SSL(SERVER)
-    mail.login(EMAIL, PASSWORD)
-    mail.select('inbox')
-    status, data = mail.search(None, 'ALL')
+    ssl_connection = imaplib.IMAP4_SSL(server_adress)
+    ssl_connection.login(user_address, user_password)
+    ssl_connection.select('inbox')
+    status, data = ssl_connection.search(None, 'ALL')
     mail_ids = []
     for block in data:
         mail_ids += block.split()
 
     for i in mail_ids:
-        status, data = mail.fetch(i, '(RFC822)')
+        status, data = ssl_connection.fetch(i, '(RFC822)')
 
         for response_part in data:
             if isinstance(response_part, tuple):
@@ -62,15 +62,24 @@ def retrieve():
                 else:
                     mail_content = message.get_payload()
 
-                conn = sqlite3.connect('mail.db')
-                c = conn.cursor()
-                c.execute("INSERT INTO mail VALUES ('" + mail_from + "','" + mail_to + "','" + mail_content + "','" + mail_date + "',' ')")
-                conn.commit()
-                conn.close()
+                mail_attachments = ''
+
+                sqlite_db = sqlite3.connect('mails.db')
+                c = sqlite_db.cursor()
+                c.execute("INSERT INTO mails VALUES ('" +
+                          mail_from + "','" +
+                          mail_to + "','" +
+                          mail_subject + "','" +
+                          mail_content + "','" +
+                          mail_attachments + "','" +
+                          mail_date + "')")
+                sqlite_db.commit()
+                sqlite_db.close()
+    ssl_connection.logout()
 
 
 def read():
-    conn = sqlite3.connect('mail.db')
+    conn = sqlite3.connect('mails.db')
     c = conn.cursor()
     for row in c.execute('SELECT * FROM mail ORDER BY source'):
         print(row)
