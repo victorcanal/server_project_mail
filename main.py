@@ -5,6 +5,7 @@ import imaplib
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import re
 
 
 def db_init():
@@ -87,9 +88,19 @@ def read():
 
 
 def send():
-    destination=input("Enter the email of destination:\n")
-    subject=input("Enter the subject of your email:\n")
-    data=input("Write your email:\n")
+    response="n"
+    while(response.lower()!="y"):
+        flag =True
+        while(flag):
+            destination=input("Enter the email of destination:\n")
+            if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", destination):
+                flag=False
+            else:
+                print("Wrong format of mail")
+        subject=input("Enter the subject of your email:\n")
+        data=input("Write your email:\n")
+        print("From:clara.rabouan@gmail.com\nTo: "+destination+"\nSubject: "+subject+"\nContent: "+data+"\n")
+        response=input("Send the mail?[y/n]")
     msg = MIMEMultipart()
     msg['From'] = 'clara.rabouan@gmail.com'
     msg['To'] = destination
