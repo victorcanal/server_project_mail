@@ -64,18 +64,21 @@ def read():
 
 
 def send():
+    destination=input("Enter the email of destination:\n")
+    subject=input("Enter the subject of your email:\n")
+    data=input("Write your email:\n")
     msg = MIMEMultipart()
     msg['From'] = 'clara.rabouan@gmail.com'
-    msg['To'] = 'clara.rabouan@gmail.com'
-    msg['Subject'] = 'Le sujet de mon mail' 
-    message = 'Bonjour !'
+    msg['To'] = destination
+    msg['Subject'] = subject
+    message = data
     msg.attach(MIMEText(message))
     mailserver = smtplib.SMTP('smtp.gmail.com',587)
     mailserver.ehlo()
     mailserver.starttls()
     mailserver.ehlo()
     mailserver.login('clara.rabouan@gmail.com', 'claradu77')
-    mailserver.sendmail('clara.rabouan@gmail.com', 'clara.rabouan@gmail.com', msg.as_string())
+    mailserver.sendmail('clara.rabouan@gmail.com', destination, msg.as_string())
     mailserver.quit()
 
 
