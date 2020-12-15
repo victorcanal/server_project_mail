@@ -6,6 +6,7 @@ import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+
 def connect():
     conn = sqlite3.connect('mail.db')
     c = conn.cursor()
@@ -14,6 +15,7 @@ def connect():
     c.execute("INSERT INTO mail VALUES ('Dupont','Moi','Bonjour','2020-12-14 20:22:30.500','')")
     conn.commit()
     conn.close()
+
 
 def retrieve():
     EMAIL = 'clara.rabouan@gmail.com'
@@ -55,6 +57,7 @@ def retrieve():
                 conn.commit()
                 conn.close()
 
+
 def read():
     conn = sqlite3.connect('mail.db')
     c = conn.cursor()
@@ -82,45 +85,30 @@ def send():
     mailserver.quit()
 
 
-def function_one():
-    return " --- Executing function_one"
-
-
-def function_two():
-    return " --- Executing function_two"
-
-
-def function_three():
-    return " --- Executing function_three"
-
-
 def menu(case: int):
     switch = {
         1: read,
         2: send,
         3: retrieve
     }
-    func = switch.get(case, lambda: "Switcher error")
+    func = switch.get(case, lambda: print("Error : The given answer is not in the list."))
     func()
 
 
 if __name__ == '__main__':
-    print("Menu :")
+    print("Menu:")
     entry_names = ["Read", "Send", "Retrieve"]
 
     for i in range(len(entry_names)):
-        print("Entry " + str(i + 1) + " : " + entry_names[i])
+        print(str(i + 1) + ": " + entry_names[i])
 
     entry_number = -1
     while True:
         try:
             print("Desired menu entry number: ")
             entry_number = int(input())
-            break
-        except ValueError:
-            print("Error : The given answer is not a number.")
-        if entry_number > len(entry_names) or entry_number <= 0:
-            print("Error : The given answer is not in the list.")
 
-    print("You selected menu entry number " + str(entry_number) + " : " + str(entry_names[entry_number - 1]))
-    menu(entry_number)
+            menu(entry_number)
+        except ValueError:
+            print("Error: The given answer is not a number.")
+
