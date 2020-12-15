@@ -9,11 +9,13 @@ from email.mime.text import MIMEText
 import re
 from getpass import getpass
 
+
 def clear(): 
     if os.name == 'nt': 
         _ = os.system('cls') 
     else: 
         _ = os.system('clear')
+
 
 def login():
     while True:
@@ -35,7 +37,7 @@ def login():
         }
         print("Enter your credentials:\n")
         mail = None
-        while(True):
+        while True:
             mail=input("Mail address: ")
             if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", mail):
                 break
@@ -49,10 +51,11 @@ def login():
             break
         else:
             print("This email address isn't supported.")
-    #print(mail,password, imapaddr,smtpaddr)
+    # print(mail,password, imapaddr,smtpaddr)
     clear()
     print("Credentials saved.")
     return mail, password, imapaddr, smtpaddr
+
 
 def db_init():
     conn = sqlite3.connect('mails.db')
@@ -75,12 +78,12 @@ def db_init():
     conn.close()
 
 
-def retrieve(user_address: str, user_password: str, server_adress: str):
+def retrieve(user_address: str, user_password: str, server_address: str):
     # EMAIL = 'clara.rabouan@gmail.com'
     # PASSWORD = 'claradu77'
     # SERVER = 'imap.gmail.com'
 
-    ssl_connection = imaplib.IMAP4_SSL(server_adress)
+    ssl_connection = imaplib.IMAP4_SSL(server_address)
     ssl_connection.login(user_address, user_password)
     ssl_connection.select('inbox')
     status, data = ssl_connection.search(None, 'ALL')
@@ -134,19 +137,19 @@ def read():
 
 
 def send():
-    response="n"
-    while(response.lower()!="y"):
-        flag =True
-        while(flag):
+    response = "n"
+    while response.lower() != "y":
+        flag = True
+        while flag:
             destination=input("Enter the email of destination:\n")
             if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", destination):
                 flag=False
             else:
                 print("Wrong format of mail")
-        subject=input("Enter the subject of your email:\n")
-        data=input("Write your email:\n")
-        print("From:clara.rabouan@gmail.com\nTo: "+destination+"\nSubject: "+subject+"\nContent: "+data+"\n")
-        response=input("Send the mail?[y/n]")
+        subject = input("Enter the subject of your email:\n")
+        data = input("Write your email:\n")
+        print("From:clara.rabouan@gmail.com\nTo: " + destination + "\nSubject: " + subject + "\nContent: " + data + "\n")
+        response = input("Send the mail?[y/n]")
     msg = MIMEMultipart()
     msg['From'] = 'clara.rabouan@gmail.com'
     msg['To'] = destination
