@@ -10,6 +10,24 @@ import re
 from getpass import getpass
 
 
+IMAP_DICT = {
+    "gmail": ("imap.gmail.com", 993),
+    "aol": ("imap.aol.com ", 993),
+    "outlook": ("imap-mail.outlook.com", 993),
+    "yahoo": ("imap.mail.yahoo.com", 993),
+    "free": ("imap.free.fr", 143),
+    "laposte": ("imap.laposte.net", 993)
+}
+SMTP_DICT = {
+    "gmail": ("smtp.gmail.com", 587),
+    "aol": ("smtp.aol.com", 587),
+    "outlook": ("smtp-mail.outlook.com", 587),
+    "yahoo": ("smtp.mail.yahoo.com", 465),
+    "free": ("smtp.free.fr", 25),
+    "laposte": ("smtp.laposte.net", 587)
+}
+
+
 def clear(): 
     if os.name == 'nt': 
         _ = os.system('cls') 
@@ -19,49 +37,49 @@ def clear():
 
 def login():
     while True:
-        imapdict = {
-            "gmail": ("imap.gmail.com",993),
-            "aol": ("imap.aol.com ",993),
-            "outlook": ("imap-mail.outlook.com",993),
-            "yahoo": ("imap.mail.yahoo.com",993),
-            "free": ("imap.free.fr",143),
-            "laposte": ("imap.laposte.net",993)
-        }
-        smtpdict = {
-            "gmail": ("smtp.gmail.com",587),
-            "aol": ("smtp.aol.com",587),
-            "outlook": ("smtp-mail.outlook.com",587),
-            "yahoo": ("smtp.mail.yahoo.com",465),
-            "free": ("smtp.free.fr",25),
-            "laposte": ("smtp.laposte.net", 587)
-        }
         print("Enter your credentials:\n")
-        mail = None
+        user_address_ = None
         while True:
-            mail=input("Mail address: ")
-            if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", mail):
+            user_address_ = input("Mail address: ")
+            if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", user_address_):
                 break
             else:
                 print("Wrong format of mail")
         password = getpass("Password: ")
-        mailserver = mail.split('@')[1].split('.')[0]
-        imapaddr = imapdict.get(mailserver, "No imap server address associated.")
-        smtpaddr = smtpdict.get(mailserver, "No smtp server address associated.")
-        if isinstance(imapaddr,tuple) and isinstance(smtpaddr, tuple):
+        mail_server = user_address_.split('@')[1].split('.')[0]
+        imap_addr = IMAP_DICT.get(mail_server, "No imap server address associated.")
+        smtp_addr = SMTP_DICT.get(mail_server, "No smtp server address associated.")
+        if isinstance(imap_addr, tuple) and isinstance(smtp_addr, tuple):
             break
         else:
             print("This email address isn't supported.")
-    # print(mail,password, imapaddr,smtpaddr)
+    # print(mail,password, imap_addr,smtp_addr)
     clear()
-    print("Credentials saved.")
-    return mail, password, imapaddr, smtpaddr
+    # print("Credentials saved.")
+    # return mail, password, imap_addr, smtp_addr
+
+    imap_connection = imaplib.IMAP4_SSL(imap_addr[0])
+    imap_connection.login(user_address_, password)
+
+    smtp_connection = smtplib.SMTP(smtp_addr[0], smtp_addr[1])
+    smtp_connection.ehlo()
+    smtp_connection.starttls()
+    smtp_connection.ehlo()
+    smtp_connection.login(user_address_, password)
+
+    return user_address, imap_connection, smtp_connection
+
+
+def logout():
+    imap_connection.logout()
+    smtp_connection.quit()
 
 
 def db_init():
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    c.execute('''DROP TABLE IF EXISTS mails''')
-    c.execute('''DROP TABLE IF EXISTS accounts''')
+    # c.execute('''DROP TABLE IF EXISTS mails''')
+    # c.execute('''DROP TABLE IF EXISTS accounts''')
     c.execute('''CREATE TABLE IF NOT EXISTS accounts (account_address VARCHAR(256) NOT NULL PRIMARY KEY)''')
     c.execute('''CREATE TABLE IF NOT EXISTS mails (
         mail_id VARCHAR(256) NOT NULL PRIMARY KEY,
@@ -92,21 +110,16 @@ def db_init():
     conn.close()
 
 
-def retrieve():  # user_address: str, user_password: str, server_address: str
-    user_address = 'clara.rabouan@gmail.com'
-    user_password = 'claradu77'
-    server_address = 'imap.gmail.com'
+def retrieve():  # connection ssl to an imap server
 
-    ssl_connection = imaplib.IMAP4_SSL(server_address)
-    ssl_connection.login(user_address, user_password)
-    ssl_connection.select('inbox')
-    status, data = ssl_connection.search(None, 'ALL')
+    imap_connection.select('inbox')
+    status, data = imap_connection.search(None, 'ALL')
     mail_ids = []
     for block in data:
         mail_ids += block.split()
 
     for i in mail_ids:
-        status, data = ssl_connection.fetch(i, '(RFC822)')
+        status, data = imap_connection.fetch(i, '(RFC822)')
 
         for response_part in data:
             if isinstance(response_part, tuple):
@@ -150,7 +163,6 @@ def retrieve():  # user_address: str, user_password: str, server_address: str
                           user_address + "')")
                 sqlite_db.commit()
                 sqlite_db.close()
-    ssl_connection.logout()
 
 
 def read():
@@ -166,7 +178,7 @@ def send():
     while response.lower() != "y":
         flag = True
         while flag:
-            destination=input("Enter the email of destination:\n")
+            destination = input("Enter the email of destination:\n")
             if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", destination):
                 flag = False
             else:
@@ -176,25 +188,20 @@ def send():
         print("From:clara.rabouan@gmail.com\nTo: " + destination + "\nSubject: " + subject + "\nContent: " + data + "\n")
         response = input("Send the mail?[y/n]")
     msg = MIMEMultipart()
-    msg['From'] = 'clara.rabouan@gmail.com'
+    msg['From'] = user_address
     msg['To'] = destination
     msg['Subject'] = subject
     message = data
     msg.attach(MIMEText(message))
-    mailserver = smtplib.SMTP('smtp.gmail.com',587)
-    mailserver.ehlo()
-    mailserver.starttls()
-    mailserver.ehlo()
-    mailserver.login('clara.rabouan@gmail.com', 'claradu77')
-    mailserver.sendmail('clara.rabouan@gmail.com', destination, msg.as_string())
-    mailserver.quit()
+    smtp_connection.sendmail(user_address, destination, msg.as_string())
 
 
 def menu(case: int):
     switch = {
-        1: read,
+        1: retrieve,
         2: send,
-        3: retrieve
+        3: read,
+        4: logout
     }
     func = switch.get(case, lambda: print("Error : The given answer is not in the list."))
     func()
@@ -202,11 +209,11 @@ def menu(case: int):
 
 if __name__ == '__main__':
     clear()
+    user_address, imap_connection, smtp_connection = login()
     db_init()
-    # login()
 
     print("Menu:")
-    entry_names = ["Read", "Send", "Retrieve"]
+    entry_names = ["Retrieve", "Send", "Read", "Logout"]
 
     for i in range(len(entry_names)):
         print(str(i + 1) + ": " + entry_names[i])
