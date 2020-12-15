@@ -64,7 +64,7 @@ def read():
     for row in c.execute('SELECT * FROM mail ORDER BY source'):
         print(row)
     conn.close()
-    
+
 
 def send():
     msg = MIMEMultipart()
@@ -80,18 +80,6 @@ def send():
     mailserver.login('clara.rabouan@gmail.com', 'claradu77')
     mailserver.sendmail('clara.rabouan@gmail.com', 'clara.rabouan@gmail.com', msg.as_string())
     mailserver.quit()
-
-
-def function_one():
-    return " --- Executing function_one"
-
-
-def function_two():
-    return " --- Executing function_two"
-
-
-def function_three():
-    return " --- Executing function_three"
 
 
 def menu(case: int):
