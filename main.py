@@ -237,8 +237,14 @@ def savetofile(request, num):
     c = conn.cursor()
     for row in c.execute(request):
         if(num == str(cpt)):
-            f = open(filename, 'x')
-            f.write("To: " + row[1] + "\nSubject: " + row[3] + "\nFrom: " + row[2] + "\nMessage-ID: " + row[0] + "\nDate: " + row[6] + "\nContent: " + row[4] + "\nAttachment: " + row[5])
+            f = open(filename, 'w')
+            f.write("To: " + row[1] + 
+                    "\nSubject: " + row[3] + 
+                    "\nFrom: " + row[2] + 
+                    "\nMessage-ID: " + row[0] + 
+                    "\nDate: " + row[6] + 
+                    "\nContent-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: quoted-printable\n\n" + row[4] + 
+                    "\nAttachment: " + row[5])
             f.close()
             print("The file has been written.")
         cpt += 1
@@ -300,9 +306,6 @@ def menu(case: int):
 
 if __name__ == '__main__':
     while True:
-        f = open("test.txt","w")
-        f.write("test")
-        f.close()
         clear()
         db_init()
         user_address, imap_connection, smtp_connection = login()
