@@ -96,7 +96,8 @@ def login():
             imap_socket = _imap_connection.socket()
             # print(str(imap_socket))
             ip_addr = str(imap_socket).split('raddr')[1].replace('>', '').replace('=', '').split("'")[1]
-            # <ssl.SSLSocket fd=968, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('192.168.0.46', 3581), raddr=('64.233.184.109', 993)>
+            # <ssl.SSLSocket fd=968, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM,
+            # proto=0, laddr=('192.168.0.46', 3581), raddr=('64.233.184.109', 993)>
             log_connection('imap', _user_address, ip_addr)
 
         except _imap_connection.error as e:
@@ -183,8 +184,8 @@ def retrieve():  # connection ssl to an imap server
     for block in data:
         mail_ids += block.split()
 
-    for i in mail_ids:
-        status, data = imap_connection.fetch(i, '(RFC822)')
+    for _i in mail_ids:
+        status, data = imap_connection.fetch(_i, '(RFC822)')
 
         for response_part in data:
             if isinstance(response_part, tuple):
@@ -266,8 +267,8 @@ def read():
         savetofile(request, num)
     
 
-
 # TODO: In send, make it so that the user can import a text file for the mail's text part
+
 
 def savetofile(request, num):
     filename = "save.eml"
@@ -289,6 +290,7 @@ def savetofile(request, num):
         cpt += 1
     conn.close()
     return
+
 
 def send():
     response = "n"
@@ -349,7 +351,7 @@ if __name__ == '__main__':
         user_address, imap_connection, smtp_connection = login()
         retrieve()
 
-        # TODO: Save mails to .imf format files
+        # TODO: Save mails to text files
 
         print("Menu:")
         entry_names = ["Refresh database", "Send", "Read", "Logout"]
