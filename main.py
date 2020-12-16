@@ -72,6 +72,15 @@ def login():
     _smtp_connection.ehlo()
     _smtp_connection.login(_user_address, password)
 
+    sqlite_db = sqlite3.connect('mails.db')
+    c = sqlite_db.cursor()
+    # Adding the email account to the database if it isn't in it already
+    response = list(c.execute("SELECT COUNT(*) FROM accounts WHERE account_address = '" + _user_address + "'"))
+    if len(response) > 0 and int(response[0][0]) == 0:
+        c.execute("INSERT INTO accounts VALUES ('" + _user_address + "')")
+    sqlite_db.commit()
+    sqlite_db.close()
+
     return _user_address, _imap_connection, _smtp_connection
 
 
@@ -159,16 +168,18 @@ def retrieve():  # connection ssl to an imap server
 
                 # TODO: Verify if id isn't already in database
 
-                c.execute("INSERT INTO mails VALUES ('" +
-                          mail_id + "','" +
-                          mail_from + "','" +
-                          mail_to + "','" +
-                          mail_subject + "','" +
-                          mail_content + "','" +
-                          mail_attachments + "','" +
-                          mail_date + "'," +
-                          str(int(mail_is_outbound)) + ",'" +
-                          user_address + "')")
+                response = list(c.execute("SELECT COUNT(*) FROM mails WHERE mail_id = '" + mail_id + "'"))
+                if len(response) > 0 and int(response[0][0]) == 0:
+                    c.execute("INSERT INTO mails VALUES ('" +
+                              mail_id + "','" +
+                              mail_from + "','" +
+                              mail_to + "','" +
+                              mail_subject + "','" +
+                              mail_content + "','" +
+                              mail_attachments + "','" +
+                              mail_date + "'," +
+                              str(int(mail_is_outbound)) + ",'" +
+                              user_address + "')")
                 sqlite_db.commit()
                 sqlite_db.close()
 
@@ -228,8 +239,8 @@ def menu(case: int):
 if __name__ == '__main__':
     while True:
         clear()
-        user_address, imap_connection, smtp_connection = login()
         db_init()
+        user_address, imap_connection, smtp_connection = login()
         retrieve()
 
         # TODO: After logging out, send the user back to login
