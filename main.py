@@ -264,7 +264,6 @@ def send():
                 flag = False
             else:
                 print("E-mail is not of a good format")
-                os.getc
         subject = input("Enter the subject of your email: ")
         content = input("Write your email: ")
         print("--------------------------------------------\nFrom: " + user_address + "\n" +
