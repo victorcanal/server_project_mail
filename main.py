@@ -210,7 +210,12 @@ def send():
     msg['Subject'] = subject
     message = content
     msg.attach(MIMEText(message))
+<<<<<<< Updated upstream
     smtp_connection.sendmail(user_address, to, msg.as_string())
+=======
+    smtp_connection.sendmail(user_address, destination, msg.as_string())
+    print("Mail send successfully!!\n")
+>>>>>>> Stashed changes
 
 
 def menu(case: int):
@@ -225,26 +230,29 @@ def menu(case: int):
 
 
 if __name__ == '__main__':
-    clear()
-    user_address, imap_connection, smtp_connection = login()
-    db_init()
-
-    # TODO: After logging out, send the user back to login
-    # TODO: In read : sort mails
-    # TODO: Save mails to .imf format files
-
-    print("Menu:")
-    entry_names = ["Retrieve", "Send", "Read", "Logout"]
-
-    entry_number = -1
     while True:
-        for i in range(len(entry_names)):
-            print(str(i + 1) + ": " + entry_names[i])
+        clear()
+        user_address, imap_connection, smtp_connection = login()
+        db_init()
 
-        try:
-            print("Desired menu entry number: ")
-            entry_number = int(input())
+        # TODO: After logging out, send the user back to login
+        # TODO: In read : sort mails
+        # TODO: Save mails to .imf format files
 
-            menu(entry_number)
-        except ValueError:
-            print("Error: The given answer is not a number.")
+        print("Menu:")
+        entry_names = ["Retrieve", "Send", "Read", "Logout"]
+
+        entry_number = -1
+        while True:
+            if entry_number==4:
+                break
+            for i in range(len(entry_names)):
+                print(str(i + 1) + ": " + entry_names[i])
+
+            try:
+                print("Desired menu entry number: ")
+                entry_number = int(input())
+
+                menu(entry_number)
+            except ValueError:
+                print("Error: The given answer is not a number.")
