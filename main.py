@@ -39,11 +39,15 @@ def clear():
 
 
 def login():
+    _user_address = None
+    _imap_connection = None
+    _smtp_connection = None
+
     while True:
-        print("Enter your credentials:\n")
+        print(" --- Login --- ")
         _user_address = None
         while True:
-            _user_address = input("Mail address: ")
+            _user_address = input("E-mail: ")
             if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", _user_address):
                 break
             else:
@@ -52,25 +56,31 @@ def login():
         mail_server = _user_address.split('@')[1].split('.')[0]
         imap_addr = IMAP_DICT.get(mail_server, "No imap server address associated.")
         smtp_addr = SMTP_DICT.get(mail_server, "No smtp server address associated.")
-        if isinstance(imap_addr, tuple) and isinstance(smtp_addr, tuple):
-            break
-        else:
+        if not (isinstance(imap_addr, tuple) and isinstance(smtp_addr, tuple)):
             print("This email address isn't supported.")
+            continue
 
-    # print(mail,password, imap_addr,smtp_addr)
-    clear()
-    # print("Credentials saved.")
-    # return mail, password, imap_addr, smtp_addr
+        _imap_connection = imaplib.IMAP4_SSL(imap_addr[0])
+        try:
+            _imap_connection.login(_user_address, password)
+        except _imap_connection.error as e:
+            if 'Invalid credentials' in str(e):
+                print('IMAP Invalid credentials')
+            else:
+                print('IMAP Error')
+            continue
 
-    # TODO: Try catch for if credentials are wrong
-    _imap_connection = imaplib.IMAP4_SSL(imap_addr[0])
-    _imap_connection.login(_user_address, password)
+        _smtp_connection = smtplib.SMTP(smtp_addr[0], smtp_addr[1])
+        _smtp_connection.ehlo()
+        _smtp_connection.starttls()
+        _smtp_connection.ehlo()
+        try:
+            _smtp_connection.login(_user_address, password)
+        except smtplib.SMTPAuthenticationError:
+            print('SMTP Invalid credentials')
+            continue
 
-    _smtp_connection = smtplib.SMTP(smtp_addr[0], smtp_addr[1])
-    _smtp_connection.ehlo()
-    _smtp_connection.starttls()
-    _smtp_connection.ehlo()
-    _smtp_connection.login(_user_address, password)
+        break
 
     sqlite_db = sqlite3.connect('mails.db')
     c = sqlite_db.cursor()
@@ -166,8 +176,6 @@ def retrieve():  # connection ssl to an imap server
                 sqlite_db = sqlite3.connect('mails.db')
                 c = sqlite_db.cursor()
 
-                # TODO: Verify if id isn't already in database
-
                 response = list(c.execute("SELECT COUNT(*) FROM mails WHERE mail_id = '" + mail_id + "'"))
                 if len(response) > 0 and int(response[0][0]) == 0:
                     c.execute("INSERT INTO mails VALUES ('" +
@@ -192,7 +200,7 @@ def read():
     conn.close()
 
 
-    # TODO: In send, make it so that the user can import a text file for the mail's text part
+# TODO: In send, make it so that the user can import a text file for the mail's text part
 
 
 def send():
@@ -243,8 +251,6 @@ if __name__ == '__main__':
         user_address, imap_connection, smtp_connection = login()
         retrieve()
 
-        # TODO: After logging out, send the user back to login
-        # TODO: In read : sort mails
         # TODO: Save mails to .imf format files
 
         print("Menu:")
