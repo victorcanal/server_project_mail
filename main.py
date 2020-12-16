@@ -174,9 +174,28 @@ def retrieve():  # connection ssl to an imap server
 
 
 def read():
+    request="Error"
+    verif="Error"
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    for row in c.execute('SELECT * FROM mails ORDER BY mail_date'):
+    while request=="Error":
+        case=int(input("Read:\n1:Mail sent\n2:Mail received\n"))
+        switch = {
+        1: 'SELECT * FROM mails where mail_is_outbound=1',
+        2: 'SELECT * FROM mails where mail_is_outbound=0'
+        }
+        request=str(switch.get(case,"Error"))
+    while verif=="Error":
+        case=int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
+        switch = {
+        1: ' ORDER BY mail_date;',
+        2: ' ORDER BY mail_from;',
+        3: ' ORDER BY mail_to_list;',
+        4: ' ORDER BY mail_subject;'
+        }
+        verif=str(switch.get(case,"Error"))
+    request+=str(switch.get(case))
+    for row in c.execute(request):
         print(row)
     conn.close()
 
