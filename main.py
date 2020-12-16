@@ -195,13 +195,21 @@ def read():
         }
         verif=str(switch.get(case,"Error"))
     request+=str(switch.get(case))
+    cpt = 1
     for row in c.execute(request):
-        print(row)
+        print(cpt, row)
+        cpt += 1
+    choice = input("Would you like to save an email? [y/n] ")
+    if(choice == "y"):
+        num = input("Number of the email to save? ")
+        savetofile(request, num)
     conn.close()
 
 
     # TODO: In send, make it so that the user can import a text file for the mail's text part
 
+def savetofile(request, num):
+    return
 
 def send():
     response = "n"
