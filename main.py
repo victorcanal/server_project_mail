@@ -210,12 +210,8 @@ def send():
     msg['Subject'] = subject
     message = content
     msg.attach(MIMEText(message))
-<<<<<<< Updated upstream
     smtp_connection.sendmail(user_address, to, msg.as_string())
-=======
-    smtp_connection.sendmail(user_address, destination, msg.as_string())
     print("Mail send successfully!!\n")
->>>>>>> Stashed changes
 
 
 def menu(case: int):
