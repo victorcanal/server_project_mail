@@ -230,17 +230,18 @@ if __name__ == '__main__':
         clear()
         user_address, imap_connection, smtp_connection = login()
         db_init()
+        retrieve()
 
         # TODO: After logging out, send the user back to login
         # TODO: In read : sort mails
         # TODO: Save mails to .imf format files
 
         print("Menu:")
-        entry_names = ["Retrieve", "Send", "Read", "Logout"]
+        entry_names = ["Refresh database", "Send", "Read", "Logout"]
 
         entry_number = -1
         while True:
-            if entry_number==4:
+            if entry_number == 4:
                 break
             for i in range(len(entry_names)):
                 print(str(i + 1) + ": " + entry_names[i])
