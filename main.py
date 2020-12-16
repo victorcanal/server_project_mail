@@ -218,18 +218,31 @@ def read():
     request+=str(switch.get(case))
     cpt = 1
     for row in c.execute(request):
-        print(cpt, row)
+        print(str(cpt) + " " + str(row))
         cpt += 1
+    conn.close()
     choice = input("Would you like to save an email? [y/n] ")
     if(choice == "y"):
         num = input("Number of the email to save? ")
         savetofile(request, num)
-    conn.close()
+    
 
 
 # TODO: In send, make it so that the user can import a text file for the mail's text part
 
 def savetofile(request, num):
+    filename = "save.eml"
+    cpt = 1
+    conn = sqlite3.connect('mails.db')
+    c = conn.cursor()
+    for row in c.execute(request):
+        if(num == str(cpt)):
+            f = open(filename, 'x')
+            f.write("To: " + row[1] + "\nSubject: " + row[3] + "\nFrom: " + row[2] + "\nMessage-ID: " + row[0] + "\nDate: " + row[6] + "\nContent: " + row[4] + "\nAttachment: " + row[5])
+            f.close()
+            print("The file has been written.")
+        cpt += 1
+    conn.close()
     return
 
 def send():
@@ -245,6 +258,7 @@ def send():
                 flag = False
             else:
                 print("E-mail is not of a good format")
+                os.getc
         subject = input("Enter the subject of your email: ")
         content = input("Write your email: ")
         print("--------------------------------------------\nFrom: " + user_address + "\n" +
@@ -286,6 +300,9 @@ def menu(case: int):
 
 if __name__ == '__main__':
     while True:
+        f = open("test.txt","w")
+        f.write("test")
+        f.close()
         clear()
         db_init()
         user_address, imap_connection, smtp_connection = login()
