@@ -1,5 +1,5 @@
 import os
-import datetime
+from datetime import datetime
 import sqlite3
 import smtplib
 import imaplib
@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import re
 # from getpass import getpass
+import json
 
 
 # clara.rabouan@gmail.com
@@ -38,6 +39,32 @@ def clear():
         _ = os.system('clear')
 
 
+def log_connection(protocol: str, _login: str, ip_addr: str):
+    data = []
+
+    if not os.path.isfile('logs.json'):
+        with open('logs.json', 'w+') as file_writer:
+            json.dump(data, file_writer)
+
+    with open('logs.json', 'r') as file_reader:
+        data = json.load(file_reader)
+        data.append({
+            'date': str(datetime.now()),
+            'protocol': protocol,
+            'login': "clara.rabouan@gmail.com",
+            'ip_addr': "173.194.76.109"
+        })
+        # data.append({
+        #     'date': str(datetime.now()),
+        #     'protocol': protocol,
+        #     'login': _login,
+        #     'ip_addr': ip_addr
+        # })
+
+    with open('logs.json', 'w') as file_writer:
+        json.dump(data, file_writer, indent=4)
+
+
 def login():
     _user_address = None
     _imap_connection = None
@@ -63,6 +90,13 @@ def login():
         _imap_connection = imaplib.IMAP4_SSL(imap_addr[0])
         try:
             _imap_connection.login(_user_address, password)
+
+            imap_socket = _imap_connection.socket()
+            # print(str(imap_socket))
+            ip_addr = str(imap_socket).split('raddr')[1].replace('>', '').replace('=', '').split("'")[1]
+            # <ssl.SSLSocket fd=968, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('192.168.0.46', 3581), raddr=('64.233.184.109', 993)>
+            log_connection('imap', _user_address, ip_addr)
+
         except _imap_connection.error as e:
             if 'Invalid credentials' in str(e):
                 print('IMAP Invalid credentials')
@@ -76,6 +110,11 @@ def login():
         _smtp_connection.ehlo()
         try:
             _smtp_connection.login(_user_address, password)
+
+            smtp_socket = _smtp_connection.sock
+            # print(str(smtp_socket))
+            ip_addr = str(smtp_socket).split('raddr')[1].replace('>', '').replace('=', '').split("'")[1]
+            log_connection('smtp', _user_address, ip_addr)
         except smtplib.SMTPAuthenticationError:
             print('SMTP Invalid credentials')
             continue
@@ -102,8 +141,8 @@ def logout():
 def db_init():
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    # c.execute('''DROP TABLE IF EXISTS mails''')
-    # c.execute('''DROP TABLE IF EXISTS accounts''')
+    c.execute('''DROP TABLE IF EXISTS mails''')
+    c.execute('''DROP TABLE IF EXISTS accounts''')
     c.execute('''CREATE TABLE IF NOT EXISTS accounts (account_address VARCHAR(256) NOT NULL PRIMARY KEY)''')
     c.execute('''CREATE TABLE IF NOT EXISTS mails (
         mail_id VARCHAR(256) NOT NULL PRIMARY KEY,
@@ -159,7 +198,7 @@ def retrieve():  # connection ssl to an imap server
                 mail_from = message['from']
                 mail_to = message['to']
                 mail_subject = message['subject']
-                mail_date = str(datetime.datetime.now())
+                mail_date = str(datetime.now())
 
                 if message.is_multipart():
                     mail_content = ''
