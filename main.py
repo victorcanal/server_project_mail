@@ -177,10 +177,19 @@ def db_init():
 
 
 def retrieve():  # connection ssl to an imap server
-
-    imap_connection.select('inbox')
-    status, data = imap_connection.search(None, 'ALL')
     mail_ids = []
+    #Mail Inbox
+    imap_connection.select("inbox")
+    status, data = imap_connection.search(None, 'ALL')
+    for block in data:
+        mail_ids += block.split()
+    #Mail sent
+    for i in imap_connection.list()[1]:
+        l = i.decode().split(' "/" ')
+        if "sent"in l[0].lower():
+            sentBox=l[1]
+    imap_connection.select(sentBox)
+    status, data = imap_connection.search(None, 'ALL')
     for block in data:
         mail_ids += block.split()
 
@@ -191,10 +200,10 @@ def retrieve():  # connection ssl to an imap server
             if isinstance(response_part, tuple):
                 message = email.message_from_bytes(response_part[1])
 
-                # print('Mail number ' + str(i))
-                # for key in message:
-                #     print(key)
-                # print("#############################################")
+                print('Mail number ' + str(i))
+                for key in message:
+                    print(key)
+                print("#############################################")
 
                 mail_id = message['message-id']
                 print(mail_id)
