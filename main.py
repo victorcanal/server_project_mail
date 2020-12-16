@@ -6,6 +6,8 @@ import imaplib
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 import re
 # from getpass import getpass
 import json
@@ -253,13 +255,40 @@ def read():
         }
         verif=str(switch.get(case,"Error"))
     request+=str(switch.get(case))
+    cpt = 1
     for row in c.execute(request):
-        print(row)
+        print(str(cpt) + " " + str(row))
+        cpt += 1
     conn.close()
+    choice = input("Would you like to save an email? [y/n] ")
+    if(choice == "y"):
+        num = input("Number of the email to save? ")
+        savetofile(request, num)
+    
 
 
 # TODO: In send, make it so that the user can import a text file for the mail's text part
 
+def savetofile(request, num):
+    filename = "save.eml"
+    cpt = 1
+    conn = sqlite3.connect('mails.db')
+    c = conn.cursor()
+    for row in c.execute(request):
+        if(num == str(cpt)):
+            f = open(filename, 'w')
+            f.write("To: " + row[1] + 
+                    "\nSubject: " + row[3] + 
+                    "\nFrom: " + row[2] + 
+                    "\nMessage-ID: " + row[0] + 
+                    "\nDate: " + row[6] + 
+                    "\nContent-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: quoted-printable\n\n" + row[4] + 
+                    "\nAttachment: " + row[5])
+            f.close()
+            print("The file has been written.")
+        cpt += 1
+    conn.close()
+    return
 
 def send():
     response = "n"
@@ -276,10 +305,12 @@ def send():
                 print("E-mail is not of a good format")
         subject = input("Enter the subject of your email: ")
         content = input("Write your email: ")
-        print("From: " + user_address + "\n" +
+        print("--------------------------------------------\nFrom: " + user_address + "\n" +
               "To: " + to + "\n" +
               "Subject: " + subject + "\n" +
               " --- Content --- \n" + content + "\n")
+        attachment=input("Would you like to add an attachment?[y/n]")
+        path=input("Enter the path and the name of the file to attach or just the name if you are in the same directory: ")
         response = input("Send the e-mail?[y/n]")
     msg = MIMEMultipart()
     msg['From'] = user_address
@@ -287,6 +318,15 @@ def send():
     msg['Subject'] = subject
     message = content
     msg.attach(MIMEText(message))
+    if attachment=="y":
+        #attach_file_name = 'C:/Users/thibault/Desktop/Advanced structure/ADSA mini project/server_project_mail/attachment.txt'
+        attach_file = open(path, 'rb') # Open the file as binary mode
+        payload = MIMEBase('application', 'octate-stream')
+        payload.set_payload((attach_file).read())
+        encoders.encode_base64(payload) #encode the attachment
+        #add payload header with filename
+        payload.add_header('Content-Decomposition', 'attachment', filename=path)
+        msg.attach(payload)
     smtp_connection.sendmail(user_address, to, msg.as_string())
     print("Mail send successfully!!\n")
 
