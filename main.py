@@ -6,6 +6,8 @@ import imaplib
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 import re
 # from getpass import getpass
 
@@ -245,10 +247,12 @@ def send():
                 print("E-mail is not of a good format")
         subject = input("Enter the subject of your email: ")
         content = input("Write your email: ")
-        print("From: " + user_address + "\n" +
+        print("--------------------------------------------\nFrom: " + user_address + "\n" +
               "To: " + to + "\n" +
               "Subject: " + subject + "\n" +
               " --- Content --- \n" + content + "\n")
+        attachment=input("Would you like to add an attachment?[y/n]")
+        path=input("Enter the path and the name of the file to attach or just the name if you are in the same directory: ")
         response = input("Send the e-mail?[y/n]")
     msg = MIMEMultipart()
     msg['From'] = user_address
@@ -256,6 +260,15 @@ def send():
     msg['Subject'] = subject
     message = content
     msg.attach(MIMEText(message))
+    if attachment=="y":
+        #attach_file_name = 'C:/Users/thibault/Desktop/Advanced structure/ADSA mini project/server_project_mail/attachment.txt'
+        attach_file = open(path, 'rb') # Open the file as binary mode
+        payload = MIMEBase('application', 'octate-stream')
+        payload.set_payload((attach_file).read())
+        encoders.encode_base64(payload) #encode the attachment
+        #add payload header with filename
+        payload.add_header('Content-Decomposition', 'attachment', filename=path)
+        msg.attach(payload)
     smtp_connection.sendmail(user_address, to, msg.as_string())
     print("Mail send successfully!!\n")
 
