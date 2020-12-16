@@ -10,6 +10,9 @@ import re
 # from getpass import getpass
 
 
+# clara.rabouan@gmail.com
+
+
 IMAP_DICT = {
     "gmail": ("imap.gmail.com", 993),
     "aol": ("imap.aol.com ", 993),
@@ -60,16 +63,16 @@ def login():
     # return mail, password, imap_addr, smtp_addr
 
     # TODO: Try catch for if credentials are wrong
-    imap_connection = imaplib.IMAP4_SSL(imap_addr[0])
-    imap_connection.login(_user_address, password)
+    _imap_connection = imaplib.IMAP4_SSL(imap_addr[0])
+    _imap_connection.login(_user_address, password)
 
-    smtp_connection = smtplib.SMTP(smtp_addr[0], smtp_addr[1])
-    smtp_connection.ehlo()
-    smtp_connection.starttls()
-    smtp_connection.ehlo()
-    smtp_connection.login(_user_address, password)
+    _smtp_connection = smtplib.SMTP(smtp_addr[0], smtp_addr[1])
+    _smtp_connection.ehlo()
+    _smtp_connection.starttls()
+    _smtp_connection.ehlo()
+    _smtp_connection.login(_user_address, password)
 
-    return _user_address, imap_connection, smtp_connection
+    return _user_address, _imap_connection, _smtp_connection
 
 
 def logout():
@@ -127,10 +130,10 @@ def retrieve():  # connection ssl to an imap server
             if isinstance(response_part, tuple):
                 message = email.message_from_bytes(response_part[1])
 
-                print('Mail number ' + str(i))
-                for key in message:
-                    print(key)
-                print("#############################################")
+                # print('Mail number ' + str(i))
+                # for key in message:
+                #     print(key)
+                # print("#############################################")
 
                 mail_id = message['message-id']
                 print(mail_id)
@@ -178,27 +181,36 @@ def read():
     conn.close()
 
 
+    # TODO: In send, make it so that the user can import a text file for the mail's text part
+
+
 def send():
     response = "n"
+    to = None
+    subject = None
+    content = None
     while response.lower() != "y":
         flag = True
         while flag:
-            destination = input("Enter the email of destination:\n")
-            if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", destination):
+            to = input("Enter the email of destination:\n")
+            if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", to):
                 flag = False
             else:
-                print("Wrong format of mail")
-        subject = input("Enter the subject of your email:\n")
-        data = input("Write your email:\n")
-        print("From:clara.rabouan@gmail.com\nTo: " + destination + "\nSubject: " + subject + "\nContent: " + data + "\n")
-        response = input("Send the mail?[y/n]")
+                print("E-mail is not of a good format")
+        subject = input("Enter the subject of your email: ")
+        content = input("Write your email: ")
+        print("From: " + user_address + "\n" +
+              "To: " + to + "\n" +
+              "Subject: " + subject + "\n" +
+              " --- Content --- \n" + content + "\n")
+        response = input("Send the e-mail?[y/n]")
     msg = MIMEMultipart()
     msg['From'] = user_address
-    msg['To'] = destination
+    msg['To'] = to
     msg['Subject'] = subject
-    message = data
+    message = content
     msg.attach(MIMEText(message))
-    smtp_connection.sendmail(user_address, destination, msg.as_string())
+    smtp_connection.sendmail(user_address, to, msg.as_string())
 
 
 def menu(case: int):
