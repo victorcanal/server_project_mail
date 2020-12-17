@@ -151,11 +151,12 @@ def logout():
     smtp_connection.quit()
 
 
+
 def db_init():
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    c.execute('''DROP TABLE IF EXISTS mails''')
-    c.execute('''DROP TABLE IF EXISTS accounts''')
+    #c.execute('''DROP TABLE IF EXISTS mails''')
+    #c.execute('''DROP TABLE IF EXISTS accounts''')
     c.execute('''CREATE TABLE IF NOT EXISTS accounts (account_address VARCHAR(256) NOT NULL PRIMARY KEY)''')
     c.execute('''CREATE TABLE IF NOT EXISTS mails (
         mail_id VARCHAR(256) NOT NULL PRIMARY KEY,
@@ -196,7 +197,6 @@ def retrieve():  # connection ssl to an imap server
     status, data = imap_connection.search(None, 'ALL')
     for block in data:
         mail_ids["inbox"] += block.split()
-<<<<<<< Updated upstream
 
     # Mail sent
     # for _i in imap_connection.list()[1]:
@@ -208,21 +208,9 @@ def retrieve():  # connection ssl to an imap server
     # for block in data:
     #     mail_ids["sent"] += block.split()
 
-=======
-    """# Mail sent
-    for _i in imap_connection.list()[1]:
-        l = _i.decode().split(' "/" ')
-        if "sent" in l[0].lower():
-            sent_box = l[1]
-    imap_connection.select(sent_box)
-    status, data = imap_connection.search(None, 'ALL')
-    for block in data:
-        mail_ids["sent"] += block.split()"""
->>>>>>> Stashed changes
     for box in mail_ids:
         for _i in mail_ids[box]:
             status, data = imap_connection.fetch(_i, '(RFC822)')
-            print(str(_i))
             for response_part in data:
                 if isinstance(response_part, tuple):
                     message = email.message_from_bytes(response_part[1])
@@ -295,7 +283,7 @@ def read():
     while verif == "Error":
         case = int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
         switch = {
-            1: ' ORDER BY mail_date;',
+            1: ' ORDER BY mail_date DESC;',
             2: ' ORDER BY mail_from;',
             3: ' ORDER BY mail_to_list;',
             4: ' ORDER BY mail_subject;'
@@ -303,13 +291,16 @@ def read():
         verif = str(switch.get(case, "Error"))
     request += str(switch.get(case))
     cpt = 1
+    if list(c.execute('SELECT COUNT(*) FROM mails'))[0][0]==0:
+        print("There are no mails in the inbox!")
+        return
     for row in c.execute(request):
         print("--------------------------------------------\n"+str(cpt)+") From: " + row[1] + "\n"
         +"Subject: "+row[3])
         cpt += 1   
     while True:
         email_selected=int(input("\nChoose the number of the email to read: "))
-        if email_selected>0 and email_selected<cpt-1:
+        if email_selected>0 and email_selected<=cpt-1:
             break
     row=c.execute(request).fetchall()
     print("--------------------------------------------\nFrom: " + row[email_selected-1][1] + "\n" +
@@ -320,14 +311,14 @@ def read():
     choice = input("Would you like to save the email? [y/n] ")
     if choice == "y":
         #num = input("Number of the email to save? ")
-        savetofile(request, email_selected)
+        savetofile(request, str(email_selected))
 
 
 # TODO: In send, make it so that the user can import a text file for the mail's text part
 
 
-def savetofile(request, num):
-    filename = "save.eml"
+def savetofile(request, num:str):
+    filename =input("\nChoose the name the file: ")+".eml"
     cpt = 1
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
@@ -343,7 +334,7 @@ def savetofile(request, num):
                         4] +
                     "\nAttachment: " + row[5])
             f.close()
-            print("The file has been written.")
+            print("The mail has been saved in: "+filename)
         cpt += 1
     conn.close()
     return
@@ -394,6 +385,7 @@ def delete():
         c = conn.cursor()
         c.execute('''DROP TABLE IF EXISTS mails''')
         conn.close()
+        db_init()
         print("Table dropped.")
     else:
         print("This number is not assigned")
