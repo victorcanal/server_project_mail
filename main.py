@@ -192,19 +192,20 @@ def retrieve():  # connection ssl to an imap server
         "sent": []
     }
     # Mail Inbox
-    imap_connection.select("inbox")  # "inbox"
+    imap_connection.select()  # "inbox"
     status, data = imap_connection.search(None, 'ALL')
     for block in data:
         mail_ids["inbox"] += block.split()
+
     # Mail sent
-    for _i in imap_connection.list()[1]:
-        l = _i.decode().split(' "/" ')
-        if "sent" in l[0].lower():
-            sent_box = l[1]
-    imap_connection.select(sent_box)
-    status, data = imap_connection.search(None, 'ALL')
-    for block in data:
-        mail_ids["sent"] += block.split()
+    # for _i in imap_connection.list()[1]:
+    #     l = _i.decode().split(' "/" ')
+    #     if "sent" in l[0].lower():
+    #         sent_box = l[1]
+    # imap_connection.select(sent_box)
+    # status, data = imap_connection.search(None, 'ALL')
+    # for block in data:
+    #     mail_ids["sent"] += block.split()
 
     for box in mail_ids:
         for _i in mail_ids[box]:
@@ -243,16 +244,16 @@ def retrieve():  # connection ssl to an imap server
 
                     response = list(c.execute("SELECT COUNT(*) FROM mails WHERE mail_id = '" + mail_id + "'"))
                     if len(response) > 0 and int(response[0][0]) == 0:
-                        print("INSERT INTO mails VALUES ('" +
-                                  mail_id + "','" +
-                                  mail_from + "','" +
-                                  mail_to + "','" +
-                                  sql_escape(mail_subject) + "','" +
-                                  sql_escape(mail_content) + "','" +
-                                  mail_attachments + "','" +
-                                  mail_date + "'," +
-                                  str(int(mail_is_outbound)) + ',"' +
-                                  user_address + '")')
+                        # print("INSERT INTO mails VALUES ('" +
+                        #       mail_id + "','" +
+                        #       mail_from + "','" +
+                        #       mail_to + "','" +
+                        #       sql_escape(mail_subject) + "','" +
+                        #       sql_escape(mail_content) + "','" +
+                        #       mail_attachments + "','" +
+                        #       mail_date + "'," +
+                        #       str(int(mail_is_outbound)) + ',"' +
+                        #       user_address + '")')
                         c.execute("INSERT INTO mails VALUES ('" +
                                   mail_id + "','" +
                                   mail_from + "','" +
@@ -325,6 +326,7 @@ def savetofile(request, num):
     conn.close()
     return
 
+
 def delete():
     print("Where would you like to delete all the mails?")
     print("1: In the mail server")
@@ -346,6 +348,7 @@ def delete():
         print("Table dropped.")
     else:
         print("This number is not assigned")
+
 
 def send():
     response = "n"
@@ -376,6 +379,7 @@ def send():
     msg['Subject'] = subject
     message = content
     msg.attach(MIMEText(message))
+
     if attachment == "y":
         # attach_file_name = 'C:/Users/thibault/Desktop/Advanced structure/ADSA mini project/server_project_mail/attachment.txt'
         attach_file = open(path, 'rb')  # Open the file as binary mode
@@ -417,7 +421,7 @@ if __name__ == '__main__':
         # TODO: Save mails to text files
 
         print("Menu:")
-        entry_names = ["Refresh database", "Send", "Read", "Logout"]
+        entry_names = ["Refresh local database", "Send", "Read", "Logout"]
 
         entry_number = -1
         while True:
