@@ -401,7 +401,8 @@ def menu(case: int):
         1: retrieve,
         2: send,
         3: read,
-        4: logout
+        4: delete,
+        5: logout
     }
     func = switch.get(case, lambda: print("Error : The given answer is not in the list."))
     func()
@@ -417,11 +418,11 @@ if __name__ == '__main__':
         # TODO: Save mails to text files
 
         print("Menu:")
-        entry_names = ["Refresh database", "Send", "Read", "Logout"]
+        entry_names = ["Refresh database", "Send", "Read", "Delete", "Log Out"]
 
         entry_number = -1
         while True:
-            if entry_number == 4:
+            if entry_number == 5:
                 break
             for i in range(len(entry_names)):
                 print(str(i + 1) + ": " + entry_names[i])
