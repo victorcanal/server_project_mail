@@ -326,18 +326,45 @@ def savetofile(request, num):
     return
 
 def delete():
-    print("Where would you like to delete all the mails?")
-    print("1: In the mail server")
-    print("2: In the sqlite database")
+    print("Where would you like to delete mails?")
+    print("1: In the inbox of the mail server")
+    print("2: In the sqlite database (all the mails)")
     choice = input()
     if choice == "1":
-        if input("Are you sure? All emails will be deleted. [y/n] ") == "y":
+        print("1: One mail at a time")
+        print("2: All mails")
+        choice = input()
+        if choice == "2":
+            if input("Are you sure? All emails will be deleted. [y/n] ") == "y":
+                imap_connection.select()
+                status, data = imap_connection.search(None, 'ALL')
+                for block in data[0].split():
+                    imap_connection.store(block, '+FLAGS', '\\Deleted')
+                imap_connection.expunge()
+                print("Inbox expunged.")
+        else:
             imap_connection.select()
             status, data = imap_connection.search(None, 'ALL')
             for block in data[0].split():
-                imap_connection.store(block, '+FLAGS', '\\Deleted')
+                block_status, block_data = imap_connection.fetch(block, '(RFC822)')
+                for response_part in block_data:
+                    if isinstance(response_part, tuple):
+                        message = email.message_from_bytes(response_part[1])
+                        mail_from = str(email.header.make_header(email.header.decode_header(message['from'])))
+                        mail_to = str(email.header.make_header(email.header.decode_header(message['to'])))
+                        mail_subject = str(email.header.make_header(email.header.decode_header(message['subject'])))
+                        mail_date = str(message['date'])
+                        print("From: " + mail_from + "; To: " + mail_to + "; Subject: " + mail_subject + "; Date: " + mail_date)
+                        choice = input("Delete this mail? [y/n] [any other input to stop]")
+                        if choice.lower() == "y":
+                            imap_connection.store(block, '+FLAGS', '\\Deleted')
+                        elif choice.lower() =="n":
+                            continue
+                        else:
+                            break
             imap_connection.expunge()
             print("Inbox expunged.")
+
     elif choice == "2":
         conn = sqlite3.connect('mails.db')
         c = conn.cursor()
