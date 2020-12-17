@@ -196,6 +196,7 @@ def retrieve():  # connection ssl to an imap server
     status, data = imap_connection.search(None, 'ALL')
     for block in data:
         mail_ids["inbox"] += block.split()
+<<<<<<< Updated upstream
 
     # Mail sent
     # for _i in imap_connection.list()[1]:
@@ -207,10 +208,21 @@ def retrieve():  # connection ssl to an imap server
     # for block in data:
     #     mail_ids["sent"] += block.split()
 
+=======
+    """# Mail sent
+    for _i in imap_connection.list()[1]:
+        l = _i.decode().split(' "/" ')
+        if "sent" in l[0].lower():
+            sent_box = l[1]
+    imap_connection.select(sent_box)
+    status, data = imap_connection.search(None, 'ALL')
+    for block in data:
+        mail_ids["sent"] += block.split()"""
+>>>>>>> Stashed changes
     for box in mail_ids:
         for _i in mail_ids[box]:
             status, data = imap_connection.fetch(_i, '(RFC822)')
-
+            print(str(_i))
             for response_part in data:
                 if isinstance(response_part, tuple):
                     message = email.message_from_bytes(response_part[1])
@@ -269,17 +281,17 @@ def retrieve():  # connection ssl to an imap server
 
 
 def read():
-    request = "Error"
+    request = 'SELECT * FROM mails where mail_is_outbound=0'
     verif = "Error"
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    while request == "Error":
+    """while request == "Error":
         case = int(input("Read:\n1:Mail sent\n2:Mail received\n"))
         switch = {
             1: 'SELECT * FROM mails where mail_is_outbound=1',
             2: 'SELECT * FROM mails where mail_is_outbound=0'
         }
-        request = str(switch.get(case, "Error"))
+        request = str(switch.get(case, "Error"))"""
     while verif == "Error":
         case = int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
         switch = {
@@ -292,13 +304,23 @@ def read():
     request += str(switch.get(case))
     cpt = 1
     for row in c.execute(request):
-        print(str(cpt) + " " + str(row))
-        cpt += 1
+        print("--------------------------------------------\n"+str(cpt)+") From: " + row[1] + "\n"
+        +"Subject: "+row[3])
+        cpt += 1   
+    while True:
+        email_selected=int(input("\nChoose the number of the email to read: "))
+        if email_selected>0 and email_selected<cpt-1:
+            break
+    row=c.execute(request).fetchall()
+    print("--------------------------------------------\nFrom: " + row[email_selected-1][1] + "\n" +
+              "To: " + row[email_selected-1][2] + "\n" +
+              "Subject: " + row[email_selected-1][3] + "\n" +
+              " --- Content --- \n" + row[email_selected-1][4] + "\n")
     conn.close()
-    choice = input("Would you like to save an email? [y/n] ")
+    choice = input("Would you like to save the email? [y/n] ")
     if choice == "y":
-        num = input("Number of the email to save? ")
-        savetofile(request, num)
+        #num = input("Number of the email to save? ")
+        savetofile(request, email_selected)
 
 
 # TODO: In send, make it so that the user can import a text file for the mail's text part
