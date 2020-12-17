@@ -210,7 +210,6 @@ def retrieve():  # connection ssl to an imap server
     for box in mail_ids:
         for _i in mail_ids[box]:
             status, data = imap_connection.fetch(_i, '(RFC822)')
-            print(str(_i))
             for response_part in data:
                 if isinstance(response_part, tuple):
                     message = email.message_from_bytes(response_part[1])
@@ -271,6 +270,7 @@ def retrieve():  # connection ssl to an imap server
 def read():
     request = 'SELECT * FROM mails where mail_is_outbound=0'
     verif = "Error"
+
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
     """while request == "Error":
@@ -280,10 +280,11 @@ def read():
             2: 'SELECT * FROM mails where mail_is_outbound=0'
         }
         request = str(switch.get(case, "Error"))"""
+
     while verif == "Error":
         case = int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
         switch = {
-            1: ' ORDER BY mail_date;',
+            1: ' ORDER BY mail_date DESC;',
             2: ' ORDER BY mail_from;',
             3: ' ORDER BY mail_to_list;',
             4: ' ORDER BY mail_subject;'
@@ -291,31 +292,38 @@ def read():
         verif = str(switch.get(case, "Error"))
     request += str(switch.get(case))
     cpt = 1
+    if list(c.execute('SELECT COUNT(*) FROM mails'))[0][0] == 0:
+        print("There are no mails in the inbox!")
+        return
+
     for row in c.execute(request):
-        print("--------------------------------------------\n"+str(cpt)+") From: " + row[1] + "\n"
-        +"Subject: "+row[3])
+        print("--------------------------------------------\n" +
+              str(cpt) + ") From: " + row[1] + "\n" +
+              "Subject: "+row[3])
         cpt += 1
+
     while True:
-        email_selected=int(input("\nChoose the number of the email to read: "))
-        if email_selected>0 and email_selected<cpt-1:
+        email_selected = int(input("\nChoose the number of the email to read: "))
+        if 0 < email_selected <= cpt-1:
             break
-    row=c.execute(request).fetchall()
-    print("--------------------------------------------\nFrom: " + row[email_selected-1][1] + "\n" +
-              "To: " + row[email_selected-1][2] + "\n" +
-              "Subject: " + row[email_selected-1][3] + "\n" +
-              " --- Content --- \n" + row[email_selected-1][4] + "\n")
+
+    row = c.execute(request).fetchall()
+    print("--------------------------------------------\n" +
+          "From: " + row[email_selected-1][1] + "\n" +
+          "To: " + row[email_selected-1][2] + "\n" +
+          "Subject: " + row[email_selected-1][3] + "\n" +
+          " --- Content --- \n" +
+          row[email_selected-1][4] + "\n")
     conn.close()
+
     choice = input("Would you like to save the email? [y/n] ")
     if choice == "y":
-        #num = input("Number of the email to save? ")
-        savetofile(request, email_selected)
+        # num = input("Number of the email to save? ")
+        savetofile(request, str(email_selected))
 
 
-# TODO: In send, make it so that the user can import a text file for the mail's text part
-
-
-def savetofile(request, num):
-    filename = "save.eml"
+def savetofile(request, num: str):
+    filename = input("\nChoose the name the file: ")+".eml"
     cpt = 1
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
@@ -327,11 +335,12 @@ def savetofile(request, num):
                     "\nFrom: " + row[2] +
                     "\nMessage-ID: " + row[0] +
                     "\nDate: " + row[6] +
-                    "\nContent-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: quoted-printable\n\n" + row[
-                        4] +
+                    "\nContent-Type: text/plain; charset=utf-8" +
+                    "\nContent-Transfer-Encoding: quoted-printable\n" +
+                    "\n" + row[4] +
                     "\nAttachment: " + row[5])
             f.close()
-            print("The file has been written.")
+            print("The mail has been saved in: "+filename)
         cpt += 1
     conn.close()
     return
@@ -366,11 +375,14 @@ def delete():
                         mail_to = str(email.header.make_header(email.header.decode_header(message['to'])))
                         mail_subject = str(email.header.make_header(email.header.decode_header(message['subject'])))
                         mail_date = str(message['date'])
-                        print("From: " + mail_from + "; To: " + mail_to + "; Subject: " + mail_subject + "; Date: " + mail_date)
+                        print("From: " + mail_from +
+                              "; To: " + mail_to +
+                              "; Subject: " + mail_subject +
+                              "; Date: " + mail_date)
                         choice = input("Delete this mail? [y/n] [any other input to stop] ")
                         if choice.lower() == "y":
                             imap_connection.store(block, '+FLAGS', '\\Deleted')
-                        elif choice.lower() =="n":
+                        elif choice.lower() == "n":
                             continue
                         else:
                             break
@@ -382,6 +394,7 @@ def delete():
         c = conn.cursor()
         c.execute('''DROP TABLE IF EXISTS mails''')
         conn.close()
+        db_init()
         print("Table dropped.")
     else:
         print("This number is not assigned")
@@ -392,20 +405,28 @@ def send():
     to = None
     subject = None
     content = None
+    attachment = None
+    path = None
+
     while response.lower() != "y":
         flag = True
+
         while flag:
             to = input("Enter the email of destination:\n")
             if re.match(r"([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)", to):
                 flag = False
             else:
                 print("E-mail is not of a good format")
+
         subject = input("Enter the subject of your email: ")
         content = input("Write your email: ")
-        print("--------------------------------------------\nFrom: " + user_address + "\n" +
+        print("--------------------------------------------\n" +
+              "From: " + user_address + "\n" +
               "To: " + to + "\n" +
               "Subject: " + subject + "\n" +
-              " --- Content --- \n" + content + "\n")
+              " --- Content --- \n" +
+              content + "\n" +
+              "--------------------------------------------\n")
         attachment = input("Would you like to add an attachment?[y/n]")
         if attachment == "y":
             path = input(
@@ -422,7 +443,7 @@ def send():
         # attach_file_name = 'C:/Users/thibault/Desktop/Advanced structure/ADSA mini project/server_project_mail/attachment.txt'
         attach_file = open(path, 'rb')  # Open the file as binary mode
         payload = MIMEBase('application', 'octate-stream')
-        payload.set_payload((attach_file).read())
+        payload.set_payload(attach_file.read())
         encoders.encode_base64(payload)  # encode the attachment
         # add payload header with filename
         payload.add_header('Content-Decomposition', 'attachment', filename=path)
