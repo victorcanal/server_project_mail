@@ -10,10 +10,10 @@ from email.mime.base import MIMEBase
 from email import encoders
 from email import header
 import re
-# from getpass import getpass
 import json
+# from getpass import getpass
 
-#
+# clara.rabouan@gmail.com
 
 
 IMAP_DICT = {
@@ -154,8 +154,8 @@ def logout():
 def db_init():
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    c.execute('''DROP TABLE IF EXISTS mails''')
-    c.execute('''DROP TABLE IF EXISTS accounts''')
+    # c.execute('''DROP TABLE IF EXISTS mails''')
+    # c.execute('''DROP TABLE IF EXISTS accounts''')
     c.execute('''CREATE TABLE IF NOT EXISTS accounts (account_address VARCHAR(256) NOT NULL PRIMARY KEY)''')
     c.execute('''CREATE TABLE IF NOT EXISTS mails (
         mail_id VARCHAR(256) NOT NULL PRIMARY KEY,
@@ -196,7 +196,6 @@ def retrieve():  # connection ssl to an imap server
     status, data = imap_connection.search(None, 'ALL')
     for block in data:
         mail_ids["inbox"] += block.split()
-<<<<<<< Updated upstream
 
     # Mail sent
     # for _i in imap_connection.list()[1]:
@@ -208,17 +207,6 @@ def retrieve():  # connection ssl to an imap server
     # for block in data:
     #     mail_ids["sent"] += block.split()
 
-=======
-    """# Mail sent
-    for _i in imap_connection.list()[1]:
-        l = _i.decode().split(' "/" ')
-        if "sent" in l[0].lower():
-            sent_box = l[1]
-    imap_connection.select(sent_box)
-    status, data = imap_connection.search(None, 'ALL')
-    for block in data:
-        mail_ids["sent"] += block.split()"""
->>>>>>> Stashed changes
     for box in mail_ids:
         for _i in mail_ids[box]:
             status, data = imap_connection.fetch(_i, '(RFC822)')
@@ -306,7 +294,7 @@ def read():
     for row in c.execute(request):
         print("--------------------------------------------\n"+str(cpt)+") From: " + row[1] + "\n"
         +"Subject: "+row[3])
-        cpt += 1   
+        cpt += 1
     while True:
         email_selected=int(input("\nChoose the number of the email to read: "))
         if email_selected>0 and email_selected<cpt-1:
