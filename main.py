@@ -447,8 +447,6 @@ if __name__ == '__main__':
         user_address, imap_connection, smtp_connection = login()
         retrieve()
 
-        # TODO: Save mails to text files
-
         print("Menu:")
 
         entry_names = ["Refresh database", "Send", "Read", "Delete", "Logout"]
