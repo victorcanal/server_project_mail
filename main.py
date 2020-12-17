@@ -196,7 +196,6 @@ def retrieve():  # connection ssl to an imap server
     status, data = imap_connection.search(None, 'ALL')
     for block in data:
         mail_ids["inbox"] += block.split()
-<<<<<<< Updated upstream
 
     # Mail sent
     # for _i in imap_connection.list()[1]:
@@ -208,17 +207,6 @@ def retrieve():  # connection ssl to an imap server
     # for block in data:
     #     mail_ids["sent"] += block.split()
 
-=======
-    """# Mail sent
-    for _i in imap_connection.list()[1]:
-        l = _i.decode().split(' "/" ')
-        if "sent" in l[0].lower():
-            sent_box = l[1]
-    imap_connection.select(sent_box)
-    status, data = imap_connection.search(None, 'ALL')
-    for block in data:
-        mail_ids["sent"] += block.split()"""
->>>>>>> Stashed changes
     for box in mail_ids:
         for _i in mail_ids[box]:
             status, data = imap_connection.fetch(_i, '(RFC822)')
