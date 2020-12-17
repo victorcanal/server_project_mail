@@ -13,7 +13,7 @@ import re
 # from getpass import getpass
 import json
 
-# clara.rabouan@gmail.com
+#
 
 
 IMAP_DICT = {
@@ -477,7 +477,7 @@ if __name__ == '__main__':
 
         entry_number = -1
         while True:
-            if entry_names[entry_number] == "Logout":
+            if entry_number == 5:
                 break
             for i in range(len(entry_names)):
                 print(str(i + 1) + ": " + entry_names[i])
