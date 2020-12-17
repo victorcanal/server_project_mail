@@ -63,14 +63,14 @@ def log_connection(protocol: str, _login: str, ip_addr: str):
     data.append({
         'date': str(datetime.now()),
         'protocol': protocol,
-        'login': "clara.rabouan@gmail.com",
-        'ip_addr': "173.194.76.109"
+        'login': _login,
+        'ip_addr': ip_addr
     })
     # data.append({
     #     'date': str(datetime.now()),
     #     'protocol': protocol,
-    #     'login': _login,
-    #     'ip_addr': ip_addr
+    #     'login': "clara.rabouan@gmail.com",
+    #     'ip_addr': "173.194.76.109"
     # })
 
     with open('logs.json', 'w') as file_writer:
