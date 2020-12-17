@@ -8,10 +8,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+from email import header
 import re
 # from getpass import getpass
 import json
-
 
 # clara.rabouan@gmail.com
 
@@ -32,12 +32,21 @@ SMTP_DICT = {
     "free": ("smtp.free.fr", 25),
     "laposte": ("smtp.laposte.net", 587)
 }
+SQL_ESCAPE_DICT = {
+    "'": "\\'",
+    '"': '\\"',
+    '%': '\\%',
+    '_': '\\_',
+    '\n': '\\n',
+    '\r': '\\r'
+}
+# \\: A backslash (\) character
 
 
-def clear(): 
-    if os.name == 'nt': 
-        _ = os.system('cls') 
-    else: 
+def clear():
+    if os.name == 'nt':
+        _ = os.system('cls')
+    else:
         _ = os.system('clear')
 
 
@@ -47,21 +56,22 @@ def log_connection(protocol: str, _login: str, ip_addr: str):
     if not os.path.isfile('logs.json'):
         with open('logs.json', 'w+') as file_writer:
             json.dump(data, file_writer)
+    else:
+        with open('logs.json', 'r') as file_reader:
+            data = json.load(file_reader)
 
-    with open('logs.json', 'r') as file_reader:
-        data = json.load(file_reader)
-        data.append({
-            'date': str(datetime.now()),
-            'protocol': protocol,
-            'login': "clara.rabouan@gmail.com",
-            'ip_addr': "173.194.76.109"
-        })
-        # data.append({
-        #     'date': str(datetime.now()),
-        #     'protocol': protocol,
-        #     'login': _login,
-        #     'ip_addr': ip_addr
-        # })
+    data.append({
+        'date': str(datetime.now()),
+        'protocol': protocol,
+        'login': "clara.rabouan@gmail.com",
+        'ip_addr': "173.194.76.109"
+    })
+    # data.append({
+    #     'date': str(datetime.now()),
+    #     'protocol': protocol,
+    #     'login': _login,
+    #     'ip_addr': ip_addr
+    # })
 
     with open('logs.json', 'w') as file_writer:
         json.dump(data, file_writer, indent=4)
@@ -177,104 +187,118 @@ def db_init():
 
 
 def retrieve():  # connection ssl to an imap server
-    mail_ids = []
-    #Mail Inbox
-    imap_connection.select("inbox")
+    mail_ids = {
+        "inbox": [],
+        "sent": []
+    }
+    # Mail Inbox
+    imap_connection.select("inbox")  # "inbox"
     status, data = imap_connection.search(None, 'ALL')
     for block in data:
-        mail_ids += block.split()
-    #Mail sent
-    for i in imap_connection.list()[1]:
-        l = i.decode().split(' "/" ')
-        if "sent"in l[0].lower():
-            sentBox=l[1]
-    imap_connection.select(sentBox)
+        mail_ids["inbox"] += block.split()
+    # Mail sent
+    for _i in imap_connection.list()[1]:
+        l = _i.decode().split(' "/" ')
+        if "sent" in l[0].lower():
+            sent_box = l[1]
+    imap_connection.select(sent_box)
     status, data = imap_connection.search(None, 'ALL')
     for block in data:
-        mail_ids += block.split()
+        mail_ids["sent"] += block.split()
 
-    for _i in mail_ids:
-        status, data = imap_connection.fetch(_i, '(RFC822)')
+    for box in mail_ids:
+        for _i in mail_ids[box]:
+            status, data = imap_connection.fetch(_i, '(RFC822)')
 
-        for response_part in data:
-            if isinstance(response_part, tuple):
-                message = email.message_from_bytes(response_part[1])
+            for response_part in data:
+                if isinstance(response_part, tuple):
+                    message = email.message_from_bytes(response_part[1])
 
-                print('Mail number ' + str(i))
-                for key in message:
-                    print(key)
-                print("#############################################")
+                    # print('Mail number ' + str(i))
+                    # for key in message:
+                    #     print(key)
+                    # print("#############################################")
 
-                mail_id = message['message-id']
-                print(mail_id)
-                mail_from = message['from']
-                mail_to = message['to']
-                mail_subject = message['subject']
-                mail_date = str(datetime.now())
+                    mail_id = message['message-id']
+                    # print(mail_id)
+                    mail_from = str(email.header.make_header(email.header.decode_header(message['from'])))
+                    mail_to = str(email.header.make_header(email.header.decode_header(message['to'])))
+                    mail_subject = str(email.header.make_header(email.header.decode_header(message['subject'])))
+                    mail_date = str(message['date'])
 
-                if message.is_multipart():
-                    mail_content = ''
+                    if message.is_multipart():
+                        mail_content = ''
 
-                    for part in message.get_payload():
-                        if part.get_content_type() == 'text/plain':
-                            mail_content += part.get_payload()
-                else:
-                    mail_content = message.get_payload()
+                        for part in message.get_payload():
+                            if part.get_content_type() == 'text/plain':
+                                mail_content += part.get_payload()
+                    else:
+                        mail_content = message.get_payload()
 
-                mail_attachments = ''
-                mail_is_outbound = False
+                    mail_attachments = ''
+                    mail_is_outbound = box == 'sent'
 
-                sqlite_db = sqlite3.connect('mails.db')
-                c = sqlite_db.cursor()
+                    sqlite_db = sqlite3.connect('mails.db')
+                    c = sqlite_db.cursor()
 
-                response = list(c.execute("SELECT COUNT(*) FROM mails WHERE mail_id = '" + mail_id + "'"))
-                if len(response) > 0 and int(response[0][0]) == 0:
-                    c.execute("INSERT INTO mails VALUES ('" +
-                              mail_id + "','" +
-                              mail_from + "','" +
-                              mail_to + "','" +
-                              mail_subject + "','" +
-                              mail_content + "','" +
-                              mail_attachments + "','" +
-                              mail_date + "'," +
-                              str(int(mail_is_outbound)) + ",'" +
-                              user_address + "')")
-                sqlite_db.commit()
-                sqlite_db.close()
+                    response = list(c.execute("SELECT COUNT(*) FROM mails WHERE mail_id = '" + mail_id + "'"))
+                    if len(response) > 0 and int(response[0][0]) == 0:
+                        print("INSERT INTO mails VALUES ('" +
+                                  mail_id + "','" +
+                                  mail_from + "','" +
+                                  mail_to + "','" +
+                                  sql_escape(mail_subject) + "','" +
+                                  sql_escape(mail_content) + "','" +
+                                  mail_attachments + "','" +
+                                  mail_date + "'," +
+                                  str(int(mail_is_outbound)) + ',"' +
+                                  user_address + '")')
+                        c.execute("INSERT INTO mails VALUES ('" +
+                                  mail_id + "','" +
+                                  mail_from + "','" +
+                                  mail_to + "','" +
+                                  sql_escape(mail_subject) + "','" +
+                                  sql_escape(mail_content) + "','" +
+                                  mail_attachments + "','" +
+                                  mail_date + "'," +
+                                  str(int(mail_is_outbound)) + ',"' +
+                                  user_address + '")')
+                    sqlite_db.commit()
+                    sqlite_db.close()
 
 
 def read():
-    request="Error"
-    verif="Error"
+    request = "Error"
+    verif = "Error"
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    while request=="Error":
-        case=int(input("Read:\n1:Mail sent\n2:Mail received\n"))
+    while request == "Error":
+        case = int(input("Read:\n1:Mail sent\n2:Mail received\n"))
         switch = {
-        1: 'SELECT * FROM mails where mail_is_outbound=1',
-        2: 'SELECT * FROM mails where mail_is_outbound=0'
+            1: 'SELECT * FROM mails where mail_is_outbound=1',
+            2: 'SELECT * FROM mails where mail_is_outbound=0'
         }
-        request=str(switch.get(case,"Error"))
-    while verif=="Error":
-        case=int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
+        request = str(switch.get(case, "Error"))
+    while verif == "Error":
+        case = int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
         switch = {
-        1: ' ORDER BY mail_date;',
-        2: ' ORDER BY mail_from;',
-        3: ' ORDER BY mail_to_list;',
-        4: ' ORDER BY mail_subject;'
+            1: ' ORDER BY mail_date;',
+            2: ' ORDER BY mail_from;',
+            3: ' ORDER BY mail_to_list;',
+            4: ' ORDER BY mail_subject;'
         }
-        verif=str(switch.get(case,"Error"))
-    request+=str(switch.get(case))
+        verif = str(switch.get(case, "Error"))
+    request += str(switch.get(case))
     cpt = 1
     for row in c.execute(request):
         print(str(cpt) + " " + str(row))
         cpt += 1
     conn.close()
     choice = input("Would you like to save an email? [y/n] ")
-    if(choice == "y"):
+    if choice == "y":
         num = input("Number of the email to save? ")
         savetofile(request, num)
-    
+
 
 # TODO: In send, make it so that the user can import a text file for the mail's text part
 
@@ -285,14 +309,15 @@ def savetofile(request, num):
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
     for row in c.execute(request):
-        if(num == str(cpt)):
+        if num == str(cpt):
             f = open(filename, 'w')
-            f.write("To: " + row[1] + 
-                    "\nSubject: " + row[3] + 
-                    "\nFrom: " + row[2] + 
-                    "\nMessage-ID: " + row[0] + 
-                    "\nDate: " + row[6] + 
-                    "\nContent-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: quoted-printable\n\n" + row[4] + 
+            f.write("To: " + row[1] +
+                    "\nSubject: " + row[3] +
+                    "\nFrom: " + row[2] +
+                    "\nMessage-ID: " + row[0] +
+                    "\nDate: " + row[6] +
+                    "\nContent-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: quoted-printable\n\n" + row[
+                        4] +
                     "\nAttachment: " + row[5])
             f.close()
             print("The file has been written.")
@@ -320,8 +345,9 @@ def send():
               "To: " + to + "\n" +
               "Subject: " + subject + "\n" +
               " --- Content --- \n" + content + "\n")
-        attachment=input("Would you like to add an attachment?[y/n]")
-        path=input("Enter the path and the name of the file to attach or just the name if you are in the same directory: ")
+        attachment = input("Would you like to add an attachment?[y/n]")
+        path = input(
+            "Enter the path and the name of the file to attach or just the name if you are in the same directory: ")
         response = input("Send the e-mail?[y/n]")
     msg = MIMEMultipart()
     msg['From'] = user_address
@@ -329,17 +355,24 @@ def send():
     msg['Subject'] = subject
     message = content
     msg.attach(MIMEText(message))
-    if attachment=="y":
-        #attach_file_name = 'C:/Users/thibault/Desktop/Advanced structure/ADSA mini project/server_project_mail/attachment.txt'
-        attach_file = open(path, 'rb') # Open the file as binary mode
+    if attachment == "y":
+        # attach_file_name = 'C:/Users/thibault/Desktop/Advanced structure/ADSA mini project/server_project_mail/attachment.txt'
+        attach_file = open(path, 'rb')  # Open the file as binary mode
         payload = MIMEBase('application', 'octate-stream')
         payload.set_payload((attach_file).read())
-        encoders.encode_base64(payload) #encode the attachment
-        #add payload header with filename
+        encoders.encode_base64(payload)  # encode the attachment
+        # add payload header with filename
         payload.add_header('Content-Decomposition', 'attachment', filename=path)
         msg.attach(payload)
     smtp_connection.sendmail(user_address, to, msg.as_string())
     print("Mail send successfully!!\n")
+
+
+def sql_escape(statement: str):
+    statement = statement.replace('\\', '\\\\')
+    for char in SQL_ESCAPE_DICT:
+        statement = statement.replace(char, SQL_ESCAPE_DICT[char])
+    return statement
 
 
 def menu(case: int):
