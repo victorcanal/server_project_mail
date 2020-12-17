@@ -325,6 +325,27 @@ def savetofile(request, num):
     conn.close()
     return
 
+def delete():
+    print("Where would you like to delete all the mails?")
+    print("1: In the mail server")
+    print("2: In the sqlite database")
+    choice = input()
+    if choice == "1":
+        if input("Are you sure? All emails will be deleted. [y/n] ") == "y":
+            imap_connection.select()
+            status, data = imap_connection.search(None, 'ALL')
+            for block in data[0].split():
+                imap_connection.store(block, '+FLAGS', '\\Deleted')
+            imap_connection.expunge()
+            print("Inbox expunged.")
+    elif choice == "2":
+        conn = sqlite3.connect('mails.db')
+        c = conn.cursor()
+        c.execute('''DROP TABLE IF EXISTS mails''')
+        conn.close()
+        print("Table dropped.")
+    else:
+        print("This number is not assigned")
 
 def send():
     response = "n"
