@@ -355,7 +355,7 @@ def delete():
                         mail_subject = str(email.header.make_header(email.header.decode_header(message['subject'])))
                         mail_date = str(message['date'])
                         print("From: " + mail_from + "; To: " + mail_to + "; Subject: " + mail_subject + "; Date: " + mail_date)
-                        choice = input("Delete this mail? [y/n] [any other input to stop]")
+                        choice = input("Delete this mail? [y/n] [any other input to stop] ")
                         if choice.lower() == "y":
                             imap_connection.store(block, '+FLAGS', '\\Deleted')
                         elif choice.lower() =="n":
