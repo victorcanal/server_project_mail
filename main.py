@@ -485,7 +485,7 @@ def send():
         payload.add_header('Content-Decomposition', 'attachment', filename=path)
         msg.attach(payload)
     smtp_connection.sendmail(user_address, to, msg.as_string())
-    print("Mail send successfully!!\n")
+    print("Mail sent successfully!\n")
 
 
 def sql_escape(statement: str):
