@@ -430,11 +430,11 @@ def send():
               " --- Content --- \n" +
               content + "\n" +
               "--------------------------------------------\n")
-        attachment = input("Would you like to add an attachment?[y/n]")
+        attachment = input("Would you like to add an attachment? [y/n] ")
         if attachment == "y":
             path = input(
                 "Enter the path and the name of the file to attach or just the name if you are in the same directory: ")
-        response = input("Send the e-mail?[y/n]")
+        response = input("Send the e-mail? [y/n] ")
     msg = MIMEMultipart()
     msg['From'] = user_address
     msg['To'] = to
