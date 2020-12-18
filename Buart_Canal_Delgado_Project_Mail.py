@@ -421,7 +421,7 @@ def delete():
 
                 choice_3 = input("Are you sure you want to delete this mail? [y/n] [any other input to stop] ")
                 if choice_3.lower() == "y":
-                    imap_connection.store(data[0].split()[selected_email], '+FLAGS', '\\Deleted')
+                    imap_connection.store(data[0].split()[selected_email-1], '+FLAGS', '\\Deleted')
                     imap_connection.expunge()
                     # print("Inbox expunged.")
                 elif choice_3.lower() == "n":
