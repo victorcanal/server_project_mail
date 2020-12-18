@@ -7,4 +7,4 @@
  - import os
  - os.chdir(r"chemin du dossier du programme")
    (en remplaçant "chemin du dossier du programme" par le chemin d'accès au dossier contenant le fichier .py du programme)
- - exec(open(r"./main.py").read())
+ - exec(open(r"./Buart_Canal_Delgado_Project_Mail.py").read())
