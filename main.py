@@ -147,6 +147,7 @@ def login():
 
 
 def logout():
+    imap_connection.close()
     imap_connection.logout()
     smtp_connection.quit()
 
@@ -191,6 +192,10 @@ def retrieve():  # connection ssl to an imap server
         "inbox": [],
         "sent": []
     }
+
+    sqlite_db = sqlite3.connect('mails.db')
+    c = sqlite_db.cursor()
+
     # Mail Inbox
     imap_connection.select()  # "inbox"
     status, data = imap_connection.search(None, 'ALL')
@@ -220,29 +225,28 @@ def retrieve():  # connection ssl to an imap server
                     # print("#############################################")
 
                     mail_id = message['message-id']
-                    # print(mail_id)
-                    mail_from = str(email.header.make_header(email.header.decode_header(message['from'])))
-                    mail_to = str(email.header.make_header(email.header.decode_header(message['to'])))
-                    mail_subject = str(email.header.make_header(email.header.decode_header(message['subject'])))
-                    mail_date = str(message['date'])
 
-                    if message.is_multipart():
-                        mail_content = ''
+                    id_count = list(c.execute("SELECT COUNT(*) FROM mails WHERE mail_id = '" + mail_id + "'"))
+                    if len(id_count) > 0 and int(id_count[0][0]) == 0:
+                        # print(mail_id)
+                        mail_from = str(email.header.make_header(email.header.decode_header(message['from'])))
+                        mail_to = str(email.header.make_header(email.header.decode_header(message['to'])))
+                        mail_subject = str(email.header.make_header(email.header.decode_header(message['subject'])))
+                        mail_date = str(message['date'])
 
-                        for part in message.get_payload():
-                            if part.get_content_type() == 'text/plain':
-                                mail_content += part.get_payload()
-                    else:
-                        mail_content = message.get_payload()
+                        if message.is_multipart():
+                            mail_content = ''
 
-                    mail_attachments = ''
-                    mail_is_outbound = box == 'sent'
+                            for part in message.get_payload():
+                                if part.get_content_type() == 'text/plain':
+                                    mail_content += part.get_payload()
+                        else:
+                            mail_content = message.get_payload()
 
-                    sqlite_db = sqlite3.connect('mails.db')
-                    c = sqlite_db.cursor()
+                        mail_attachments = ''
+                        mail_is_outbound = box == 'sent'
 
-                    response = list(c.execute("SELECT COUNT(*) FROM mails WHERE mail_id = '" + mail_id + "'"))
-                    if len(response) > 0 and int(response[0][0]) == 0:
+
                         # print("INSERT INTO mails VALUES ('" +
                         #       mail_id + "','" +
                         #       mail_from + "','" +
@@ -263,8 +267,9 @@ def retrieve():  # connection ssl to an imap server
                                   mail_date + "'," +
                                   str(int(mail_is_outbound)) + ',"' +
                                   user_address + '")')
-                    sqlite_db.commit()
-                    sqlite_db.close()
+
+    sqlite_db.commit()
+    sqlite_db.close()
 
 
 def read():
