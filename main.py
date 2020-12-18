@@ -287,7 +287,7 @@ def read():
         request = str(switch.get(case, "Error"))"""
 
     while verif == "Error":
-        case = int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
+        case = int(input("Choose to sort by:\n1: Date\n2: Mail from\n3: Mail to\n4: Subject\n"))
         switch = {
             1: ('Date', ' ORDER BY mail_date DESC;'),
             2: ('From', ' ORDER BY mail_from;'),
@@ -435,11 +435,11 @@ def send():
               " --- Content --- \n" +
               content + "\n" +
               "--------------------------------------------\n")
-        attachment = input("Would you like to add an attachment?[y/n]")
+        attachment = input("Would you like to add an attachment? [y/n] ")
         if attachment == "y":
             path = input(
                 "Enter the path and the name of the file to attach or just the name if you are in the same directory: ")
-        response = input("Send the e-mail?[y/n]")
+        response = input("Send the e-mail? [y/n] ")
     msg = MIMEMultipart()
     msg['From'] = user_address
     msg['To'] = to
