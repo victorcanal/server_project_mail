@@ -147,9 +147,13 @@ def login():
 
 
 def logout():
-    imap_connection.close()
-    imap_connection.logout()
-    smtp_connection.quit()
+    try:
+        imap_connection.close()
+        imap_connection.logout()
+        smtp_connection.quit()
+    except:
+        pass
+    
 
 
 def db_init():
@@ -414,7 +418,7 @@ def delete():
             imap_connection.expunge()
             print("Inbox expunged.")
 
-        if choice_2 == 2:
+        elif choice_2 == 2:
             if input("Are you sure? All emails will be deleted. [y/n] ") == "y":
                 imap_connection.select()
                 status, data = imap_connection.search(None, 'ALL')
@@ -422,8 +426,6 @@ def delete():
                     imap_connection.store(block, '+FLAGS', '\\Deleted')
                 imap_connection.expunge()
                 print("Inbox expunged.")
-        else:
-            print("This number is not assigned")
 
     elif choice == 2:
         conn = sqlite3.connect('mails.db')
