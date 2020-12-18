@@ -278,13 +278,14 @@ def read():
 
     conn = sqlite3.connect('mails.db')
     c = conn.cursor()
-    """while request == "Error":
-        case = int(input("Read:\n1:Mail sent\n2:Mail received\n"))
-        switch = {
-            1: 'SELECT * FROM mails where mail_is_outbound=1',
-            2: 'SELECT * FROM mails where mail_is_outbound=0'
-        }
-        request = str(switch.get(case, "Error"))"""
+
+    # while request == "Error":
+    #     case = int(input("Read:\n1:Mail sent\n2:Mail received\n"))
+    #     switch = {
+    #         1: 'SELECT * FROM mails where mail_is_outbound=1',
+    #         2: 'SELECT * FROM mails where mail_is_outbound=0'
+    #     }
+    #     request = str(switch.get(case, "Error"))
 
     while verif == "Error":
         case = int(input("Choose to sort by:\n1: Date\n2: Mail from\n3: Mail to\n4: Subject\n"))
@@ -296,6 +297,7 @@ def read():
         }
         verif = str(switch.get(case, "Error"))
     request += str(switch.get(case)[1])
+
     cpt = 1
     if list(c.execute('SELECT COUNT(*) FROM mails'))[0][0] == 0:
         print("There are no mails in the inbox!")
@@ -355,23 +357,34 @@ def savetofile(request, num: str):
 
 
 def delete():
-    print("Where would you like to delete mails?")
-    print("1: In the inbox of the mail server")
-    print("2: In the sqlite database (all the mails)")
-    choice = input()
-    if choice == "1":
-        print("1: One mail at a time")
-        print("2: All mails")
-        choice = input()
-        if choice == "2":
-            if input("Are you sure? All emails will be deleted. [y/n] ") == "y":
-                imap_connection.select()
-                status, data = imap_connection.search(None, 'ALL')
-                for block in data[0].split():
-                    imap_connection.store(block, '+FLAGS', '\\Deleted')
-                imap_connection.expunge()
-                print("Inbox expunged.")
-        else:
+    choice = 0
+    while choice <= 0 or choice > 2:
+        print("Where would you like to delete the e-mails?\n" +
+              "1: In the inbox of the mail server\n" +
+              "2: In the sqlite database (all the mails)")
+        try:
+            choice = int(input())
+        except ValueError:
+            print("Error: The given answer is not a number.")
+            continue
+        if choice <= 0 or choice > 2:
+            print("Error: This number is not assigned")
+
+    if choice == 1:
+        choice_2 = 0
+        while choice_2 <= 0 or choice_2 > 2:
+            print("How would you like to delete e-mails?\n" +
+                  "1: One mail at a time\n" +
+                  "2: All mails")
+            try:
+                choice_2 = int(input())
+            except ValueError:
+                print("Error: The given answer is not a number.")
+                continue
+            if choice_2 <= 0 or choice_2 > 2:
+                print("Error: This number is not assigned")
+
+        if choice_2 == 1:
             imap_connection.select()
             status, data = imap_connection.search(None, 'ALL')
             for block in data[0].split():
@@ -387,25 +400,35 @@ def delete():
                               "; To: " + mail_to +
                               "; Subject: " + mail_subject +
                               "; Date: " + mail_date)
-                        choice = input("Delete this mail? [y/n] [any other input to stop] ")
-                        if choice.lower() == "y":
+                        choice_3 = input("Delete this mail? [y/n] [any other input to stop] ")
+                        if choice_3.lower() == "y":
                             imap_connection.store(block, '+FLAGS', '\\Deleted')
-                        elif choice.lower() == "n":
+                        elif choice_3.lower() == "n":
                             continue
                         else:
                             break
+
             imap_connection.expunge()
             print("Inbox expunged.")
 
-    elif choice == "2":
+        if choice_2 == 2:
+            if input("Are you sure? All emails will be deleted. [y/n] ") == "y":
+                imap_connection.select()
+                status, data = imap_connection.search(None, 'ALL')
+                for block in data[0].split():
+                    imap_connection.store(block, '+FLAGS', '\\Deleted')
+                imap_connection.expunge()
+                print("Inbox expunged.")
+        else:
+            print("This number is not assigned")
+
+    elif choice == 2:
         conn = sqlite3.connect('mails.db')
         c = conn.cursor()
         c.execute('''DROP TABLE IF EXISTS mails''')
         conn.close()
         db_init()
         print("Table dropped.")
-    else:
-        print("This number is not assigned")
 
 
 def send():
