@@ -11,7 +11,7 @@ from email import encoders
 from email import header
 import re
 import json
-# from getpass import getpass
+from getpass import getpass
 
 # clara.rabouan@gmail.com
 
@@ -91,7 +91,7 @@ def login():
                 break
             else:
                 print("Wrong format of mail")
-        password = input("Password: ")  # getpass("Password: ")
+        password = getpass("Password: ")  # input("Password: ")
         mail_server = _user_address.split('@')[1].split('.')[0]
         imap_addr = IMAP_DICT.get(mail_server, "No imap server address associated.")
         smtp_addr = SMTP_DICT.get(mail_server, "No smtp server address associated.")
