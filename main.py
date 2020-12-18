@@ -300,8 +300,8 @@ def read():
             4: ('Subject', ' ORDER BY mail_subject;')
         }
         if case == 5:
-
             return
+
         verif = str(switch.get(case, "Error"))
     request += str(switch.get(case)[1])
 
@@ -316,19 +316,19 @@ def read():
     for row in c.execute(request):
         print("--------------------------------------------\n" +
               str(cpt) + ") From: " + row[1] + "\n" +
-              "Subject: "+row[3])
+              "Subject: " + row[3] + " - Date: " + str(row[4]))
         cpt += 1
 
     while True:
         email_selected = int(input("\nChoose the number of the email to read: "))
-        if 0 < email_selected <= cpt-1:
+        if 0 < email_selected <= cpt:
             break
 
     row = c.execute(request).fetchall()
     print("--------------------------------------------\n" +
           "From: " + row[email_selected-1][1] + "\n" +
           "To: " + row[email_selected-1][2] + "\n" +
-          "Subject: " + row[email_selected-1][3] + "\n" +
+          "Subject: " + row[email_selected-1][3] + " - Date: " + row[email_selected-1][3] + "\n" +
           " --- Content --- \n" +
           row[email_selected-1][4] + "\n")
     conn.close()
@@ -392,31 +392,42 @@ def delete():
                 print("Error: This number is not assigned")
 
         if choice_2 == 1:
-            imap_connection.select()
-            status, data = imap_connection.search(None, 'ALL')
-            for block in data[0].split():
-                block_status, block_data = imap_connection.fetch(block, '(RFC822)')
-                for response_part in block_data:
-                    if isinstance(response_part, tuple):
-                        message = email.message_from_bytes(response_part[1])
-                        mail_from = str(email.header.make_header(email.header.decode_header(message['from'])))
-                        mail_to = str(email.header.make_header(email.header.decode_header(message['to'])))
-                        mail_subject = str(email.header.make_header(email.header.decode_header(message['subject'])))
-                        mail_date = str(message['date'])
-                        print("From: " + mail_from +
-                              "; To: " + mail_to +
-                              "; Subject: " + mail_subject +
-                              "; Date: " + mail_date)
-                        choice_3 = input("Delete this mail? [y/n] [any other input to stop] ")
-                        if choice_3.lower() == "y":
-                            imap_connection.store(block, '+FLAGS', '\\Deleted')
-                        elif choice_3.lower() == "n":
-                            continue
-                        else:
-                            break
+            while True:
+                imap_connection.select()
+                status, data = imap_connection.search(None, 'ALL')
 
-            imap_connection.expunge()
-            print("Inbox expunged.")
+                cpt = 1
+                for _i in range(len(data[0].split())):
+                    block_status, block_data = imap_connection.fetch(data[0].split()[_i], '(RFC822)')
+
+                    for response_part in block_data:
+                        if isinstance(response_part, tuple):
+                            message = email.message_from_bytes(response_part[1])
+                            mail_from = str(email.header.make_header(email.header.decode_header(message['from'])))
+                            mail_subject = str(email.header.make_header(email.header.decode_header(message['subject'])))
+                            mail_date = str(message['date'])
+
+                            print("--------------------------------------------\n" +
+                                  str(cpt) + ") From: " + mail_from + "\n" +
+                                  "Subject: " + mail_subject + " - Date: " + mail_date)
+                            cpt += 1
+
+                while True:
+                    selected_email = int(input("\nChoose the number of the email to delete: "))
+                    if 0 < selected_email <= cpt:
+                        break
+                    else:
+                        print("This number is not assigned")
+
+                choice_3 = input("Are you sure you want to delete this mail? [y/n] [any other input to stop] ")
+                if choice_3.lower() == "y":
+                    imap_connection.store(data[0].split()[selected_email], '+FLAGS', '\\Deleted')
+                    imap_connection.expunge()
+                    # print("Inbox expunged.")
+                elif choice_3.lower() == "n":
+                    continue
+                else:
+                    break
 
         elif choice_2 == 2:
             if input("Are you sure? All emails will be deleted. [y/n] ") == "y":
