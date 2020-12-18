@@ -284,9 +284,9 @@ def read():
     while verif == "Error":
         case = int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
         switch = {
-            1: ('Date', 'ORDER BY mail_date DESC;'),
-            2: ('From', 'ORDER BY mail_from;'),
-            3: ('To', 'ORDER BY mail_to_list;'),
+            1: ('Date', ' ORDER BY mail_date DESC;'),
+            2: ('From', ' ORDER BY mail_from;'),
+            3: ('To', ' ORDER BY mail_to_list;'),
             4: ('Subject', ' ORDER BY mail_subject;')
         }
         verif = str(switch.get(case, "Error"))
