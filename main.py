@@ -488,6 +488,7 @@ if __name__ == '__main__':
         entry_number = -1
         while True:
             if entry_number == 5:
+                logout()
                 break
             for i in range(len(entry_names)):
                 print(str(i + 1) + ": " + entry_names[i])
