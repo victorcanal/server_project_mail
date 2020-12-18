@@ -288,13 +288,16 @@ def read():
     #     request = str(switch.get(case, "Error"))
 
     while verif == "Error":
-        case = int(input("Choose to sort by:\n1: Date\n2: Mail from\n3: Mail to\n4: Subject\n"))
+        case = int(input("Choose to sort by:\n1: Date\n2: Mail from\n3: Mail to\n4: Subject\n5: Return to the menu\n"))
         switch = {
             1: ('Date', ' ORDER BY mail_date DESC;'),
             2: ('From', ' ORDER BY mail_from;'),
             3: ('To', ' ORDER BY mail_to_list;'),
             4: ('Subject', ' ORDER BY mail_subject;')
         }
+        if case == 5:
+
+            return
         verif = str(switch.get(case, "Error"))
     request += str(switch.get(case)[1])
 
@@ -509,8 +512,6 @@ if __name__ == '__main__':
         user_address, imap_connection, smtp_connection = login()
         retrieve()
 
-        print("Menu:")
-
         entry_names = ["Refresh database", "Send", "Read", "Delete", "Logout"]
 
         entry_number = -1
@@ -518,6 +519,7 @@ if __name__ == '__main__':
             if entry_number == 5:
                 logout()
                 break
+            print("\nMenu:")
             for i in range(len(entry_names)):
                 print(str(i + 1) + ": " + entry_names[i])
 
