@@ -284,17 +284,20 @@ def read():
     while verif == "Error":
         case = int(input("Choose to sort by:\n1:Date\n2:Mail from\n3:Mail to\n4:Subject\n"))
         switch = {
-            1: ' ORDER BY mail_date DESC;',
-            2: ' ORDER BY mail_from;',
-            3: ' ORDER BY mail_to_list;',
-            4: ' ORDER BY mail_subject;'
+            1: ('Date', 'ORDER BY mail_date DESC;'),
+            2: ('From', 'ORDER BY mail_from;'),
+            3: ('To', 'ORDER BY mail_to_list;'),
+            4: ('Subject', ' ORDER BY mail_subject;')
         }
         verif = str(switch.get(case, "Error"))
-    request += str(switch.get(case))
+    request += str(switch.get(case)[1])
     cpt = 1
     if list(c.execute('SELECT COUNT(*) FROM mails'))[0][0] == 0:
         print("There are no mails in the inbox!")
         return
+
+    clear()
+    print("E-mails in the inbox sorted by " + switch.get(case, "Error")[0])
 
     for row in c.execute(request):
         print("--------------------------------------------\n" +
