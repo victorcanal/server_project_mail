@@ -494,8 +494,7 @@ if __name__ == '__main__':
                 print(str(i + 1) + ": " + entry_names[i])
 
             try:
-                print("Desired menu entry number: ")
-                entry_number = int(input())
+                entry_number = int(input("Desired menu entry number: "))
 
                 menu(entry_number)
             except ValueError:
